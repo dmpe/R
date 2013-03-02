@@ -1,0 +1,11 @@
+install.packages('shiny')
+sizes = c(1700,2100,1900,1300,1600,2200)
+prices = c(53000,65000,59000,41000,50000,68000)
+myline=lm(prices ~ sizes)
+myline
+plot(sizes, prices, xlab="size", ylab="price", main="House Valuation", ylim=c(30000,70000), xlim=c(1000,2500), pch=10, col="blue")
+abline(myline)
+fix(prices)
+fix(prices)
+red
+savehistory("~/R/udacity 3.10.")
