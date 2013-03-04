@@ -9,6 +9,8 @@ My IDE for R is [RStudio](http://www.rstudio.com/).
 
 A lot of tests require different libraries. Here are all of them I could use:
 
+library()
+
 bitops          
 car          
 caTools           
