@@ -19,9 +19,11 @@
 
 
 # Check your working directory
-getwd()
+# getwd()
+
+setwd("C:/Users/Dima/Documents/R/coursera/")
+
 # If necessary, set your working directory
-# setwd("/Volumes/Conway/R")
 
 # If necessary, install packages
 # install.packages("psych")
@@ -32,14 +34,14 @@ library(psych)
 library(sm)
 
 # Read data into a dataframe called impact
-impact <- read.table("stats1-datafiles-Stats1.13.Lab.02.txt", header = T) 
+impact <- read.table("stats1_datafiles_Stats1.13.Lab.02.txt", header = T) 
 
 # Get the dimensions of the dataframe
 dim(impact)
 nrow(impact)
 ncol(impact)
 
-edit(impact)
+# edit(impact)
 
 # Object types
 class(impact) 
@@ -55,13 +57,14 @@ class(impact$subject)
 # Summary statistics
 mean(impact$verbal_memory_baseline) 
 sd(impact$verbal_memory_baseline)
+# var(impact$verbal_memory_baseline)
 
 describe(impact) 
 
 describeBy(impact, impact$condition)
 
 # Subsetting
-edit(impact)
+# edit(impact)
 
 control <- subset(impact, impact[, 2]=="control")
 control
@@ -71,7 +74,7 @@ concussed
 
 # Histograms of control group at baseline
 par(mfrow = c(2,3)) # To view 6 histograms on one page 
-hist(control[, 3], xlab = "Verbal memory", main = "") 
+hist(control[, 3], xlab = "Verbal memory", main = "") # nic tam nebude
 hist(control[, 4], xlab = "Visual memory")
 hist(control[, 5], xlab = "Visual motor speed")
 hist(control[, 6], xlab = "Reaction time")
@@ -80,7 +83,7 @@ hist(control[, 8], xlab = "Total symptom score")
 
 # To demonstrate that there is more than one way to access a variable
 par(mfrow = c(1,2)) # To view 2 histograms on one page 
-hist(control[, 3], xlab = "Verbal memory", main = "") 
+hist(control[, 3], xlab = "Verbal memory", main = "") # obe jsou stejne, druha je lepsi > chapevejsi
 hist(control$verbal_memory_baseline, xlab = "Verbal memory", main = "") 
 
 # Histograms of concussed group at baseline
