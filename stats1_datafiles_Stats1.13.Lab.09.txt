@@ -1,0 +1,121 @@
+"subject" "conversation" "driving" "errors"
+"1" 1 "None" "Easy" 20
+"2" 2 "None" "Easy" 19
+"3" 3 "None" "Easy" 31
+"4" 4 "None" "Easy" 27
+"5" 5 "None" "Easy" 31
+"6" 6 "None" "Easy" 17
+"7" 7 "None" "Easy" 23
+"8" 8 "None" "Easy" 26
+"9" 9 "None" "Easy" 11
+"10" 10 "None" "Easy" 15
+"11" 11 "None" "Easy" 13
+"12" 12 "None" "Easy" 18
+"13" 13 "None" "Easy" 21
+"14" 14 "None" "Easy" 13
+"15" 15 "None" "Easy" 13
+"16" 16 "None" "Easy" 14
+"17" 17 "None" "Easy" 20
+"18" 18 "None" "Easy" 26
+"19" 19 "None" "Easy" 20
+"20" 20 "None" "Easy" 14
+"21" 21 "None" "Difficult" 10
+"22" 22 "None" "Difficult" 23
+"23" 23 "None" "Difficult" 31
+"24" 24 "None" "Difficult" 32
+"25" 25 "None" "Difficult" 24
+"26" 26 "None" "Difficult" 26
+"27" 27 "None" "Difficult" 46
+"28" 28 "None" "Difficult" 25
+"29" 29 "None" "Difficult" 23
+"30" 30 "None" "Difficult" 25
+"31" 31 "None" "Difficult" 13
+"32" 32 "None" "Difficult" 32
+"33" 33 "None" "Difficult" 32
+"34" 34 "None" "Difficult" 16
+"35" 35 "None" "Difficult" 26
+"36" 36 "None" "Difficult" 24
+"37" 37 "None" "Difficult" 11
+"38" 38 "None" "Difficult" 15
+"39" 39 "None" "Difficult" 19
+"40" 40 "None" "Difficult" 12
+"41" 41 "Low demand" "Easy" 21
+"42" 42 "Low demand" "Easy" 23
+"43" 43 "Low demand" "Easy" 7
+"44" 44 "Low demand" "Easy" 25
+"45" 45 "Low demand" "Easy" 15
+"46" 46 "Low demand" "Easy" 21
+"47" 47 "Low demand" "Easy" 19
+"48" 48 "Low demand" "Easy" 1
+"49" 49 "Low demand" "Easy" 25
+"50" 50 "Low demand" "Easy" 20
+"51" 51 "Low demand" "Easy" 32
+"52" 52 "Low demand" "Easy" 32
+"53" 53 "Low demand" "Easy" 14
+"54" 54 "Low demand" "Easy" 34
+"55" 55 "Low demand" "Easy" 21
+"56" 56 "Low demand" "Easy" 13
+"57" 57 "Low demand" "Easy" 20
+"58" 58 "Low demand" "Easy" 28
+"59" 59 "Low demand" "Easy" 10
+"60" 60 "Low demand" "Easy" 15
+"61" 61 "Low demand" "Difficult" 46
+"62" 62 "Low demand" "Difficult" 30
+"63" 63 "Low demand" "Difficult" 37
+"64" 64 "Low demand" "Difficult" 31
+"65" 65 "Low demand" "Difficult" 25
+"66" 66 "Low demand" "Difficult" 23
+"67" 67 "Low demand" "Difficult" 38
+"68" 68 "Low demand" "Difficult" 36
+"69" 69 "Low demand" "Difficult" 43
+"70" 70 "Low demand" "Difficult" 41
+"71" 71 "Low demand" "Difficult" 43
+"72" 72 "Low demand" "Difficult" 32
+"73" 73 "Low demand" "Difficult" 37
+"74" 74 "Low demand" "Difficult" 23
+"75" 75 "Low demand" "Difficult" 34
+"76" 76 "Low demand" "Difficult" 46
+"77" 77 "Low demand" "Difficult" 54
+"78" 78 "Low demand" "Difficult" 45
+"79" 79 "Low demand" "Difficult" 33
+"80" 80 "Low demand" "Difficult" 42
+"81" 81 "High demand" "Easy" 21
+"82" 82 "High demand" "Easy" 33
+"83" 83 "High demand" "Easy" 24
+"84" 84 "High demand" "Easy" 21
+"85" 85 "High demand" "Easy" 29
+"86" 86 "High demand" "Easy" 24
+"87" 87 "High demand" "Easy" 28
+"88" 88 "High demand" "Easy" 31
+"89" 89 "High demand" "Easy" 22
+"90" 90 "High demand" "Easy" 21
+"91" 91 "High demand" "Easy" 42
+"92" 92 "High demand" "Easy" 20
+"93" 93 "High demand" "Easy" 25
+"94" 94 "High demand" "Easy" 20
+"95" 95 "High demand" "Easy" 21
+"96" 96 "High demand" "Easy" 16
+"97" 97 "High demand" "Easy" 23
+"98" 98 "High demand" "Easy" 37
+"99" 99 "High demand" "Easy" 34
+"100" 100 "High demand" "Easy" 25
+"101" 101 "High demand" "Difficult" 46
+"102" 102 "High demand" "Difficult" 49
+"103" 103 "High demand" "Difficult" 56
+"104" 104 "High demand" "Difficult" 41
+"105" 105 "High demand" "Difficult" 56
+"106" 106 "High demand" "Difficult" 36
+"107" 107 "High demand" "Difficult" 46
+"108" 108 "High demand" "Difficult" 39
+"109" 109 "High demand" "Difficult" 42
+"110" 110 "High demand" "Difficult" 56
+"111" 111 "High demand" "Difficult" 51
+"112" 112 "High demand" "Difficult" 27
+"113" 113 "High demand" "Difficult" 45
+"114" 114 "High demand" "Difficult" 48
+"115" 115 "High demand" "Difficult" 50
+"116" 116 "High demand" "Difficult" 61
+"117" 117 "High demand" "Difficult" 43
+"118" 118 "High demand" "Difficult" 47
+"119" 119 "High demand" "Difficult" 54
+"120" 120 "High demand" "Difficult" 41

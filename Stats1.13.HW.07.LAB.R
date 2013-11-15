@@ -3,7 +3,7 @@ library(ggplot2)
 library(multilevel)
 
 # Segment 1
-
+setwd("c:/Users/Dima/Documents/R/coursera")
 # Read data into a dataframe called MOD
 ma <- read.table("Stats1.13.HW.07.txt", header = T)
 
