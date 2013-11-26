@@ -1,113 +1,60 @@
 # Statistics One, 2013, Lab 9
 
-# Lab goals
-# Conduct a between groups factorial ANOVA
-# Example
-#  An experiment designed to investigate the effects of talking on a cell phone while driving
-#  DV = Driving errors
-#  There are two IVs
-#    Driving difficulty (2 levels): Easy, Difficult
-#    Conversation difficulty (3 levels): Control, Easy, Difficult
-
-# Check your working directory
-# getwd()
-# If necessary, set your working directory
-# setwd("/Volumes/Conway/R")
+# Lab Goals
+#    Conduct a between groups factorial ANOVA
+#    Example
+#    A randomized controlled experiment designed to investigate teh effects of talking on a cell phone while driving
+#      DV = Number of driving errors
+#      Two IVs
+#         (A) Conversation difficulty (3 levels): Control, Easy, Difficult
+#         (B) Driving difficulty (2 levels): Easy, Difficult
 
 # If necessary, install packages
-# install.packages(“psych”)
-# install.packages(“car”)
+# install.packages("psych")
+# install.packages("car")
+# install.packages("lsr")
 
-# Load packages
 library(psych)
 library(car)
+library(lsr)
 
-# Read data into a data frame called AB
-AB <- read.table("Stats1.13.Lab.09.txt", header = T)
+# Segment 1
+setwd("c:/Users/Dima/Documents/R/coursera")
+# Read data into a dataframe called AB
+AB <- read.table("stats1_datafiles_Stats1.13.Lab.09.txt", header = T)
 
-# Haste and Prime were interpreted by R as integers, so let's create factors
-AB$Haste = factor(AB$Haste, levels = c(1,2,3), labels = c("Early", "On Time", "Late"))
-AB$Prime = factor(AB$Prime, levels = c(1,2), labels = c("Parable", "Control"))
-class(AB$Haste)
-class(AB$Prime)
+# Let's look at the data 
+edit(AB)
 
-# Omnibus analysis is a 3x2 factorial ANOVA with Haste and Prime as the IVs and Helping as the DV
-aov.AB = aov(AB$Helping ~ AB$Haste * AB$Prime)
-summary(aov.AB)
-aov.table = summary(aov.AB)
+# Test the homogeneity of variance assumption
+leveneTest(AB$errors ~ AB$driving * AB$conversation)
 
-# Post-hoc comparisons
-TukeyHSD(aov.AB)
+# Conduct the factorial ANOVA
+AB.model <- aov(AB$errors ~ AB$driving * AB$conversation)
+summary(AB.model)
 
-# Create a vector of SS to calculate effect size estimates
-SS.vector = aov.table[[1]]$"Sum Sq"
-SS.vector
+# Conduct simple effects analysis (of Conversation at each level of Driving)
+AB1 <- subset(AB, AB$driving == "Easy")
+AB2 <- subset(AB, AB$driving == "Difficult")
 
-# Effect sizes (partial eta-squared)
-eta.squared.A = SS.vector[1] / (SS.vector[1] + SS.vector[4])
-eta.squared.A
-eta.squared.B = SS.vector[2] / (SS.vector[2] + SS.vector[4])
-eta.squared.B
-eta.squared.AB = SS.vector[3] / (SS.vector[3] + SS.vector[4])
-eta.squared.AB
+aov.AB1 <- aov(AB1$errors ~ AB1$conversation)
+summary(aov.AB1)
 
-# Effect sizes (complete eta-squared)
-SS.total = SS.vector[1] + SS.vector[2] + SS.vector[3] + SS.vector[4]
-eta.squared.A = SS.vector[1] / SS.total
-eta.squared.A
-eta.squared.B = SS.vector[2] / SS.total
-eta.squared.B
-eta.squared.AB = SS.vector[3] / SS.total
-eta.squared.AB
+aov.AB2 <- aov(AB2$errors ~ AB2$conversation)
+summary(aov.AB2)
 
-#Simple effects analysis (of Prime at each level of Haste)
-A1.B = subset(AB, AB$Haste == "1")
-A2.B = subset(AB, AB$Haste == "2")
-A3.B = subset(AB, AB$Haste == "3")
+#Both simple effects are significant, so why is there an interaction? Let's look at effect sizes:
+etaSquared(aov.AB1, anova = T)
+etaSquared(aov.AB2, anova = T)
 
-aov.A1.B = aov(A1.B$Helping ~ A1.B$Prime)
-summary(aov.A1.B)
-aov.A2.B = aov(A2.B$Helping ~ A2.B$Prime)
-summary(aov.A2.B)
-aov.A3.B = aov(A3.B$Helping ~ A3.B$Prime)
-summary(aov.A3.B)
+# Finally, let's look at pairwise comparisons for the simple effects
+TukeyHSD(aov.AB1)
+TukeyHSD(aov.AB2)
 
-# Effect sizes for simple effects
-aov.table.A1.B = summary(aov.A1.B)
-aov.table.A2.B = summary(aov.A2.B)
-aov.table.A3.B = summary(aov.A3.B)
 
-SS.A1.B = aov.table.A1.B[[1]]$"Sum Sq"
-SS.A2.B = aov.table.A2.B[[1]]$"Sum Sq"
-SS.A3.B = aov.table.A3.B[[1]]$"Sum Sq"
 
-eta.squared.A1.B = SS.A1.B[1] / (SS.A1.B[1] + SS.A1.B[2])
-eta.squared.A1.B
-eta.squared.A2.B = SS.A2.B[1] / (SS.A2.B[1] + SS.A2.B[2])
-eta.squared.A2.B
-eta.squared.A3.B = SS.A3.B[1] / (SS.A3.B[1] + SS.A3.B[2])
-eta.squared.A3.B
 
-#Simple effects analysis (of Haste at each level of Prime)
-A.B1 = subset(A.B, A.B$Prime == "1")
-A.B2 = subset(A.B, A.B$Prime == "2")
 
-Haste = factor(A.B1$Haste, levels = c(1,2,3), labels = c("Early", "On Time", "Late"))
 
-aov.A.B1 = aov(A.B1$Helping ~ Haste)
-summary(aov.A.B1)
-aov.A.B2 = aov(A.B2$Helping ~ Haste)
-summary(aov.A.B2)
 
-# Effect sizes for simple effects
-aov.table.A.B1 = summary(aov.A.B1)
-aov.table.A.B2 = summary(aov.A.B2)
-
-SS.A.B1 = aov.table.A.B1[[1]]$"Sum Sq"
-SS.A.B2 = aov.table.A.B2[[1]]$"Sum Sq"
-
-eta.squared.A.B1 = SS.A.B1[1] / (SS.A.B1[1] + SS.A.B1[2])
-eta.squared.A.B1
-eta.squared.A.B2 = SS.A.B2[1] / (SS.A.B2[1] + SS.A.B2[2])
-eta.squared.A.B2
 
