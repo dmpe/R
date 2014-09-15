@@ -9,7 +9,6 @@ system.time(data <- xmlToDataFrame(shipments))
 # system.time(data2 <- xmlToDF(shipments,xpath = "/TABLE/BOXTURE_SHIPMENTS" ))
 # Further used only data, not data2
 
-
 # head(data)
 
 data$Price <- format(data$Price, digits = 2)
