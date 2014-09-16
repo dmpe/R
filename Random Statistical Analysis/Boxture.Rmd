@@ -3,7 +3,11 @@ title: "Boxture Datasets"
 author: "Johnny Cash"
 date: "09/14/2014"
 output:
-  html_document
+  html_document:
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 10
+    toc: yes
 ---
 
 We are going to work with `Boxture dataset`. It comes from Time:Matters company and because data are/should stay private, we **are not** going to publish them. However, we are going to use them to show/learn R.
@@ -41,7 +45,7 @@ data <- xmlToDF(shipments,xpath = "/TABLE/BOXTURE_SHIPMENTS") ## convert XML to 
 Through out the whole document I am going to use `xmlToDataFrame` function which comes already with `XML package`.
 When I am talking about speed, R and our data, why not to try to measure it, right? 
 
-```{r}
+```{r cache=TRUE}
 system.time(data <- xmlToDataFrame(shipments)) ## not only we will get execution time, but also we will get "data" dataframe
 ```
 
@@ -59,23 +63,104 @@ system.time(data2 <- xmlToDF(shipments,xpath = "/TABLE/BOXTURE_SHIPMENTS" ))
 Here I don't see any big improvements. Still similar +- 25 second. The deal is that with larger datasets, you should see far more better performance. Not exponential anymore :)
 
 ## Analysis
-Let's view our data first - just as an example of what we are going to deal with. We could also use `View(data)` or `head(data)` but because dataset contains over 1000 rows and has many columns, let's only see first row.
+
+### Our dataset
+Let's view our data first - just as an example of what we are going to deal with. 
+We have `r nrow(data)` rows with `r ncol(data)` columns. That's a lot of information just about one shipment. :) The more the better.
+
+And what about first row of our dataset? How does it look like ? We can also use `View(data)` or `head(data)` but because dataset contains over 1000 rows and has many columns, let's only see first row.
 
 ```{r}
-nrow(data)
-ncol(data)
+data[1,1:10] 
 ```
-Good we have 2665 rows with 43 columns. That's a lot of information just about one shipment. :) The more the better.
+And so on. It would be stupid have have them listed all. 
 
-```{r fig.width=120, out.width=120}
-data[1,] 
+```{r}
+data[1,35:43] 
 ```
+
 
 OK, starting here we already go deeper into the data :) With `names` function we examinate our header names (column names/titles).
 
 ```{r}
-names(data)
+column_titles <- names(data)
+column_titles
 ```
+
+### Types of variables
+
+With each dataset one should fully understand what each column represents. Not only this, but one should also understand what type of variables are we going to talk about. 
+
+And there are 2 main categories of them. `Numerical` and `categorical`. Futhermore, they are futher divided into `continuous`, `discret`, `regular-categorical` and `ordinal`.
+
+![picture for illustration](http://static.www.bmj.com/sites/default/files/imagecache/highwire_fragment_large/attachments/resources/2011/08/stats-square-1-table-11.gif)
+
+After we enumirated them, we should explain them too. So with `numerical` var, they 
+
+>  take a wide range of numerical values, and it is sensible to add, subtract, or take averages with
+those values. [OpenIntro Statistics](http://www.openintro.org/download.php?file=os2_01)
+
+With `categorical` variables you have
+
+>  a limited number of distinct values or categories. They are sometimes called discrete variables. [Shu.edu/~wachsmut](http://pirate.shu.edu/~wachsmut/Teaching/MATH1101/Intro/what-variable.html)
+
+
+```{r echo=FALSE, eval=TRUE}
+## we dont want to include this in the output HTML file, but want to eval them.
+## used to create new 2 col. table 
+types_of_variables <- c("categorical-regular", 
+                        "categorical-ordinal",
+                        "categorical-regular", 
+                        "categorical-regular", 
+                        "categorical-regular", #mail 
+                        "numerical-discret", 
+                        "numerical-discret", 
+                        "numerical-discret", 
+                        "numerical-discret", # total cost
+                        "numerical-discret", 
+                        "categorical-regular", 
+                        "categorical-regular", 
+                        "categorical-regular", 
+                        "numerical-discret",  #orign number
+                        "categorical-ordinal", # zip
+                        "categorical-regular", 
+                        "categorical-regular", #or country
+                        "categorical-ordinal",#date is always ordinal
+                        "categorical-ordinal", #destinati beg here
+                        "categorical-regular", 
+                        "categorical-regular", 
+                        "categorical-regular", 
+                        "numerical-discret",  #orign number
+                        "categorical-ordinal", # zip
+                        "categorical-regular", 
+                        "categorical-regular", #or country
+                        "categorical-ordinal",#date is always ordinal
+                        "categorical-ordinal",
+                        "categorical-regular",
+                        "categorical-regular",
+                        "categorical-regular",
+                        "categorical-ordinal",
+                        "categorical-regular", #comments
+                        "numerical-continuous",
+                        "numerical-continuous",
+                        "numerical-continuous", #km sur
+                        "numerical-continuous",
+                        "numerical-continuous", #late
+                        "numerical-continuous",
+                        "categorical-regular", #curreny
+                        "numerical-discret", #total costs
+                        "categorical-regular",
+                        "categorical-ordinal")
+
+```
+
+
+``` {r}
+variables_table <- data.frame(column_titles, types_of_variables )
+head(variables_table) # show first 6 of them
+```
+
+We have created a new table where each variable is categorized.
 
 Now let's look on some columns and data they can take. 
 
@@ -83,13 +168,13 @@ Now let's look on some columns and data they can take.
 summary(data$State)
 ```
 
-Ok, so we can have 5 different statuses of each shipment. Names are self-explanatory, I think. Out of those 273 which dont have any status, I can say that in the dataset we do have shipments which come from different "systems". Therefore, some of them don't have any. 
+Ok, so we can have 5 different statuses of each shipment. Names are self-explanatory, I think. Out of those 273 which dont have any status, I can say that they come from different "systems". Therefore, some of them don't have any. 
+
 ```{r}
 summary(data$PaymenType)
 ```
 
-We also have 2 different kinds of payment types. `KK` means Credit card and `R` means Invoice.
-
+We also have 2 different kinds of payment types. `KK` means customer paid by using credit card, whereas `R` means the same but by invoice.
 
 
 

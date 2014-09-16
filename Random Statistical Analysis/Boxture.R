@@ -10,6 +10,7 @@ system.time(data <- xmlToDataFrame(shipments))
 # Further used only data, not data2
 
 # head(data)
+column_titles <- names(data)
 
 data$Price <- format(data$Price, digits = 2)
 data$Price <- as.numeric(data$Price)
@@ -27,4 +28,4 @@ data$DestinationScheduled <- strptime(data$DestinationScheduled, "%Y-%m-%dT%H:%M
 data$DestinationActual <- strptime(data$DestinationActual, "%Y-%m-%dT%H:%M:%S")
 data$PurchasedAt <- strptime(data$PurchasedAt, "%Y-%m-%dT%H:%M:%S")
 
-View(data)
+#View(data)

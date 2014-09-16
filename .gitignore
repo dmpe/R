@@ -2,10 +2,11 @@
 
 *-Ex.R
 .Rhistory
-.RData
+*.RData
 .Rproj.user
 *.csv
 *.xls
 *.xlsm
 *.xml
-*.Rmd
+Boxture.Rmd
+Boxture.html
