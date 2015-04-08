@@ -8,14 +8,14 @@
 # 
 # directory <- "specdata"
 # id <- c(2, 4, 8, 10, 12)
+library(plyr)
 
 complete <- function(directory, id = 1:332) {
-  library(plyr)
   sWD2 <- paste(getwd(), directory, sep = "/")
   setwd(sWD2)
   getwd()
   filenames <- list.files(path = getwd())
-  sum(complete.cases(read.csv("001.csv")))
+  # sum(complete.cases(read.csv("001.csv")))
   
   dataFunc <- NULL
   nobs <- NULL

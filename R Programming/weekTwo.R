@@ -45,7 +45,7 @@ h <- function(x, y = NULL, d = 3L) {
   g
 }
 
-
+h(3, 4)
 
 
 
