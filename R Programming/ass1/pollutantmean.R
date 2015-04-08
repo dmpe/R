@@ -10,11 +10,9 @@
 
 # source("rprog_scripts_submitscript1.R")
 
-pollutantmean("specdata", "sulfate", 1:10)
-pollutantmean("specdata", "nitrate", 70:72)
-pollutantmean("specdata", "nitrate", 23)
-
-
+# pollutantmean("specdata", "sulfate", 1:10)
+# pollutantmean("specdata", "nitrate", 70:72)
+# pollutantmean("specdata", "nitrate", 23)
 
 pollutantmean <- function(directory, pollutant, id = 1:332) {
   # sWD <- paste(getwd(), "R Programming", sep = "/")

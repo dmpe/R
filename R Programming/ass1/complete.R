@@ -1,40 +1,31 @@
-
 # https://d396qusza40orc.cloudfront.net/rprog%2Fdoc%2Fcomplete-demo.html
+# source("rprog_scripts_submitscript1.R")
+
+# complete("specdata", 1)
+# complete("specdata", c(2, 4, 8, 10, 12))
+# complete("specdata", 30:25)
+# complete("specdata", 3)
+# 
+# directory <- "specdata"
+# id <- c(2, 4, 8, 10, 12)
 
 complete <- function(directory, id = 1:332) {
-  ## 'directory' is a character vector of length 1 indicating
-  ## the location of the CSV files
+  library(plyr)
+  sWD2 <- paste(getwd(), directory, sep = "/")
+  setwd(sWD2)
+  getwd()
+  filenames <- list.files(path = getwd())
+  sum(complete.cases(read.csv("001.csv")))
   
-  ## 'id' is an integer vector indicating the monitor ID numbers
-  ## to be used
+  dataFunc <- NULL
+  nobs <- NULL
   
-  ## Return a data frame of the form:
-  ## id nobs
-  ## 1  117
-  ## 2  1041
-  ## ...
-  ## where 'id' is the monitor ID number and 'nobs' is the
-  ## number of complete cases
+  for(i in 1:length(filenames)){
+    dataFunc[[i]] <- ldply(filenames[i], read.csv)  
+    nobs[[i]] <- sum(complete.cases(dataFunc[[i]]))
+  }
+  setwd("~/R-github/R Programming/ass1")
+  
+  df <- data.frame(id = 1:length(filenames), nobs = nobs)
+  df[id, ]
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
