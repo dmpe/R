@@ -8,5 +8,7 @@
 *.xls
 *.xlsm
 *.xml
+/Boxture_cache/
+/Boxture.html
 R Programming/ass3/*
 !R Programming/ass3/*
