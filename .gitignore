@@ -8,3 +8,5 @@
 *.xls
 *.xlsm
 *.xml
+R Programming/ass3/*
+!R Programming/ass3/*
