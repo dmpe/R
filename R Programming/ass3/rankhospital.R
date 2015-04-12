@@ -1,7 +1,9 @@
 # source("submitscript3.R")
+# KTK6X8BuqQ
+# https://class.coursera.org/rprog-013/assignment
 
-# state <- "BB"
-# outcome <- "hert attack"
+# state <- "TX"
+# outcome <- "heart failure"
 
 rankhospital("TX", "heart failure", 4)
 rankhospital("MD", "heart attack", "worst")
@@ -24,10 +26,34 @@ rankhospital <- function(state, outcome, num = "best") {
     df[,i] <- as.numeric(df[,i])
   }  
   
+#'   The  num  argument can take values \best", \worst",  or an integer indicating the ranking
+#'   (smaller numbers are better).  If the number given by
+#'   num is larger than the number of hospitals in that
+#'   state, then the function should return
+#'   NA. Hospitals that do not have data on a particular outcome should
+#'   be excluded from the set of hospitals when deciding the rankings.
   
-  ## Check that state and outcome are valid
-  ## Return hospital name in that state with the given rank
-  ## 30-day death rate
+  if(outcome == "heart attack") {
+    
+    df.ha <- df[, c("State", "Hospital.Name", 
+                    "Hospital.30.Day.Death..Mortality..Rates.from.Heart.Attack")]
+    df.ha <- df.ha[df.ha$State == state, ]
+    return(df.ha[which.min(df.ha$Hospital.30.Day.Death..Mortality..Rates.from.Heart.Attack), ][ ,2])
+    
+  } else if(outcome == "heart failure") {
+    
+    df.ha <- df[, c("State", "Hospital.Name", 
+                    "Hospital.30.Day.Death..Mortality..Rates.from.Heart.Failure")]
+    df.ha <- df.ha[df.ha$State == state, ]
+    return(df.ha[which.min(df.ha$Hospital.30.Day.Death..Mortality..Rates.from.Heart.Failure), ][ ,2])
+    
+  } else { # if(outcome == "pneumonia")
+    df.ha <- df[, c("State", "Hospital.Name", 
+                    "Hospital.30.Day.Death..Mortality..Rates.from.Pneumonia")]
+    df.ha <- df.ha[df.ha$State == state, ]
+    return(df.ha[which.min(df.ha$Hospital.30.Day.Death..Mortality..Rates.from.Pneumonia), ][ ,2])
+    
+  }
 }
 
 
