@@ -1,13 +1,15 @@
 Version: 1.0
 
-RestoreWorkspace: Default
+RestoreWorkspace: No
 SaveWorkspace: No
 AlwaysSaveHistory: No
 
 EnableCodeIndexing: Yes
 UseSpacesForTab: Yes
 NumSpacesForTab: 2
-Encoding: WINDOWS-1252
+Encoding: UTF-8
 
 RnwWeave: knitr
 LaTeX: pdfLaTeX
+
+AutoAppendNewline: Yes
