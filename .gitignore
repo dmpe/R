@@ -1,5 +1,3 @@
-# Example code in package build process
-
 *-Ex.R
 .Rhistory
 .RData
@@ -10,5 +8,6 @@
 *.xml
 /Boxture_cache/
 /Boxture.html
+/Boxture.rmd
 R Programming/ass3/*
 !R Programming/ass3/*
