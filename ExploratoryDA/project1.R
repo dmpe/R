@@ -36,3 +36,52 @@ consumption.sub <- consumption[consumption$Date >= ymd(20070201) & consumption$D
 # Create a separate R code file (plot1.R, plot2.R, etc.) that constructs the corresponding plot, i.e. code in plot1.R constructs the plot1.png plot. Your code file should include code for reading the data so that the plot can be fully reproduced. You must also include the code that creates the PNG file.
 # Add the PNG file and R code file to the top-level folder of your git repository (no need for separate sub-folders)
 
+
+########################
+# Plot 1 
+########################
+
+png(filename="plot1.png")
+
+hist(consumption.sub$Global_active_power, freq = T, xlab = "Global Active Power (kilowatts)", 
+     main = "Global Active Power", col = "#ff2500")
+
+dev.off()
+
+########################
+# Plot 2 
+########################
+
+png(filename="plot2.png")
+
+
+
+dev.off()
+
+
+########################
+# Plot 3
+########################
+png(filename="plot3.png")
+
+
+
+dev.off()
+
+########################
+# Plot 4
+########################
+png(filename="plot4.png")
+
+par(mfrow=c(2,2))
+
+dev.off()
+
+
+
+
+
+
+
+
+
