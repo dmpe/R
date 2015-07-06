@@ -64,8 +64,8 @@ dev.off()
 ########################
 png(filename="plot3.png")
 
-
-
+legend
+col
 dev.off()
 
 ########################
@@ -76,11 +76,6 @@ png(filename="plot4.png")
 par(mfrow=c(2,2))
 
 dev.off()
-
-
-
-
-
 
 
 
