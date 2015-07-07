@@ -2,19 +2,18 @@
 # Questions
 ##############
 
-
 library(nlme)
 library(lattice)
+library(ggplot2)
+library(datasets)
+
 xyplot(weight ~ Time | Diet, BodyWeight)
 
 
-library(lattice)
-library(datasets)
 data(airquality)
 p <- xyplot(Ozone ~ Wind | factor(Month), data = airquality)
 p
 
-library(ggplot2)
 qplot(votes, rating, data = movies)
 qplot(votes, rating, data = movies) + stats_smooth("loess")
 qplot(votes, rating, data = movies) + geom_smooth()
