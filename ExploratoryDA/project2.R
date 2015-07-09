@@ -1,5 +1,6 @@
 library(lubridate)
 library(dplyr)
+library(ggplot2)
 
 # https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip
 # download.file(url="https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip", destfile="ile.zip", method='curl')
@@ -60,9 +61,21 @@ barplot(NEI.bal$Emissions, xlab = "Year", ylim = c(0, 3500),
 # increases in emissions from 1999–2008? Use the ggplot2 plotting system to make a plot answer this question.
 #####
 
+NEI.balQ3 <- NEI %>% 
+  filter(fips == "24510") %>%
+  group_by(year, type) %>% 
+  summarise(Emissions = sum(Emissions))
+
+q3 <- ggplot(NEI.balQ3, aes(year, Emissions, group=type, color=type))
+q3 <- q3 +  geom_line() + geom_point(size=4, shape=21, fill="white") # + facet_wrap(~ type)
+q3
+
 ##### Q4 ###
 # Across the United States, how have emissions from coal combustion-related sources changed from 1999–2008?
 #####
+
+
+
 
 ##### Q5 ###
 # How have emissions from motor vehicle sources changed from 1999–2008 in Baltimore City?
@@ -84,3 +97,10 @@ barplot(NEI.bal$Emissions, xlab = "Year", ylim = c(0, 3500),
 # sources in Los Angeles County, California (fips == "06037"). Which city has seen greater changes 
 # over time in motor vehicle emissions?
 #####
+
+NEI.balQ6 <- NEI %>% 
+  filter(fips == "24510") %>%
+
+  
+NEI.sfQ6 <- NEI %>% 
+  filter(fips == "06037") %>%
