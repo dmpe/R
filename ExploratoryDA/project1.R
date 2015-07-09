@@ -70,7 +70,7 @@ png(filename="plot3.png")
 
 plot(x = consumption.sub$together, y = consumption.sub$Sub_metering_1,
      ylab = "Energy sub metering",  type="l", xlab = "", col = "#3F3F3F", lwd = 2) # black
-axis(1, at=1:3, lab=c("Thu","Fri", "Sat"))
+axis(1, at=1:3, labels =c("Thu","Fri", "Sat"))
 legend("topright", col = c("#3F3F3F", "#ff2500", "#4D6FFF"), 
        legend = c("Sub_metering_1", "Sub_metering_2", "Sub_metering_3"), lty=1, lwd=2)
 lines(consumption.sub$together, consumption.sub$Sub_metering_2, col = "#ff2500", lwd = 2) # red
