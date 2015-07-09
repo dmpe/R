@@ -5,11 +5,8 @@ library(ggplot2)
 # https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip
 # download.file(url="https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip", destfile="ile.zip", method='curl')
 
-NEI <- readRDS("ExploratoryDA/summarySCC_PM25.rds")
-NEI <- as.tbl(NEI)
-
-SCC <- readRDS("ExploratoryDA/Source_Classification_Code.rds")
-SCC <- as.tbl(SCC)
+NEI <- as.tbl(readRDS("ExploratoryDA/summarySCC_PM25.rds"))
+SCC <- as.tbl(readRDS("ExploratoryDA/Source_Classification_Code.rds"))
 
 # The overall goal of this assignment is to explore the National Emissions Inventory database and see what it say about fine 
 # particulate matter pollution in the United states over the 10-year period 1999–2008. You may use any R package you want to support your analysis.
@@ -74,33 +71,64 @@ q3
 # Across the United States, how have emissions from coal combustion-related sources changed from 1999–2008?
 #####
 
+SCC.withcodes <- SCC %>% 
+  select(SCC, Short.Name) %>%
+  filter(grepl("coal", as.character(SCC$Short.Name), ignore.case = TRUE))
 
+SCC.withcodes$SCC <- as.character(SCC.withcodes$SCC)
+SCC.withcodes$Short.Name <- as.character(SCC.withcodes$Short.Name)
 
+fjoined <- NEI[NEI$SCC %in% SCC.withcodes$SCC, ]
+
+NEI.allUSQ4 <- fjoined %>% 
+  group_by(year) %>% 
+  summarise(Emissions = sum(Emissions))
+
+q4 <- ggplot(NEI.allUSQ4, aes(x = year, y = Emissions))
+q4 <- q4 + geom_line() + xlab("Year") + ylab("Emissions in tons") + ggtitle("Emissions in the USA")
+q4
 
 ##### Q5 ###
 # How have emissions from motor vehicle sources changed from 1999–2008 in Baltimore City?
 #####
 
-NEI.bal <- NEI %>% 
+SCC.withcodes.motor <- SCC %>% 
+  select(SCC, Short.Name) %>%
+  filter(grepl("motor | vehicle", as.character(SCC$Short.Name), ignore.case = TRUE))
+
+SCC.withcodes.motor$SCC <- as.character(SCC.withcodes.motor$SCC)
+SCC.withcodes.motor$Short.Name <- as.character(SCC.withcodes.motor$Short.Name)
+
+fjoined.q5 <- NEI[NEI$SCC %in% SCC.withcodes.motor$SCC, ]
+
+NEI.balq5 <- fjoined.q5 %>% 
   filter(fips == "24510") %>%
   group_by(year) %>% 
-  summarise(Emissions = sum(Emissions))
-NEI.bal
+  summarise(Emissions = sum(Emissions)) 
 
+NEI.balq5$city <- "Baltimore"
 
-barplot(NEI.bal$Emissions, xlab = "Year", ylim = c(0, 3500),
-        ylab = "Emissions in tons", main = "Emissions in Baltimore City, Maryland", names.arg=c("1999","2002" ,"2005", "2008"))
-
+q5 <- ggplot(NEI.balq5, aes(x = year, y = Emissions))
+q5 <- q5 + geom_line() + xlab("Year") + ylab("Emissions in tons") + ggtitle("Motor Emissions in Baltimore City, Maryland")
+q5
 
 ##### Q6 ###
 # Compare emissions from motor vehicle sources in Baltimore City with emissions from motor vehicle 
 # sources in Los Angeles County, California (fips == "06037"). Which city has seen greater changes 
 # over time in motor vehicle emissions?
 #####
-
-NEI.balQ6 <- NEI %>% 
-  filter(fips == "24510") %>%
-
   
-NEI.sfQ6 <- NEI %>% 
+
+NEI.sfQ6 <- fjoined.q5 %>% 
   filter(fips == "06037") %>%
+  group_by(year) %>% 
+  summarise(Emissions = sum(Emissions)) 
+
+NEI.sfQ6$city <- "SF"
+
+bothNEI <- rbind(NEI.sfQ6,NEI.balq5)
+
+q6 <- ggplot(bothNEI, aes(x = year, y = Emissions, color = city, group = city))
+q6 <- q6 + geom_line() + xlab("Year") + ylab("Emissions in tons") + ggtitle("Motor Emissions in San Francisco")
+q6 <- q6 + coord_cartesian(ylim = c(0, 1600)) + scale_y_continuous(breaks = seq(0, 1600, 200))
+q6
