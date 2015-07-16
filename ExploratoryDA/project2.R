@@ -1,4 +1,3 @@
-library(lubridate)
 library(dplyr)
 library(ggplot2)
 
@@ -7,6 +6,8 @@ library(ggplot2)
 
 NEI <- as.tbl(readRDS("ExploratoryDA/summarySCC_PM25.rds"))
 SCC <- as.tbl(readRDS("ExploratoryDA/Source_Classification_Code.rds"))
+
+options(scipen=7) # get rid of scientific notation
 
 # The overall goal of this assignment is to explore the National Emissions Inventory database and see what it say about fine 
 # particulate matter pollution in the United states over the 10-year period 1999–2008. You may use any R package you want to support your analysis.
@@ -34,10 +35,12 @@ NEI.allUS <- NEI %>%
   group_by(year) %>% 
   summarise(Emissions = sum(Emissions))
 
+png(filename="plot1.png")
 
 plot(y = NEI.allUS$Emissions, x = NEI.allUS$year, xlab = "Year", type = "l",
-        ylab = "Emissions in tons", main = "Emissions in the USA")
+        ylab = "Emissions in tons", main = "PM2.5 Emissions in the USA 1999-2008")
 
+dev.off()
 
 ##### Q2 ###
 # Have total emissions from PM2.5 decreased in the Baltimore City, Maryland (fips == "24510") from 1999 to 
@@ -49,8 +52,12 @@ NEI.bal <- NEI %>%
             group_by(year) %>% 
             summarise(Emissions = sum(Emissions))
 
+png(filename="plot2.png")
+
 barplot(NEI.bal$Emissions, xlab = "Year", ylim = c(0, 3500),
-        ylab = "Emissions in tons", main = "Emissions in Baltimore City, Maryland", names.arg=c("1999","2002" ,"2005", "2008"))
+        ylab = "Emissions in tons", main = "PM2.5 Emissions in Baltimore City, Maryland", names.arg=c("1999","2002" ,"2005", "2008"))
+
+dev.off()
 
 ##### Q3 ###
 # Of the four types of sources indicated by the type (point, nonpoint, onroad, nonroad) variable, which of 
@@ -63,9 +70,14 @@ NEI.balQ3 <- NEI %>%
   group_by(year, type) %>% 
   summarise(Emissions = sum(Emissions))
 
+png(filename="plot3.png")
+
 q3 <- ggplot(NEI.balQ3, aes(year, Emissions, group=type, color=type))
 q3 <- q3 +  geom_line() + geom_point(size=4, shape=21, fill="white") # + facet_wrap(~ type)
 q3
+
+dev.off()
+
 
 ##### Q4 ###
 # Across the United States, how have emissions from coal combustion-related sources changed from 1999–2008?
@@ -84,9 +96,13 @@ NEI.allUSQ4 <- fjoined %>%
   group_by(year) %>% 
   summarise(Emissions = sum(Emissions))
 
+png(filename="plot4.png")
+
 q4 <- ggplot(NEI.allUSQ4, aes(x = year, y = Emissions))
 q4 <- q4 + geom_line() + xlab("Year") + ylab("Emissions in tons") + ggtitle("Emissions in the USA")
 q4
+
+dev.off()
 
 ##### Q5 ###
 # How have emissions from motor vehicle sources changed from 1999–2008 in Baltimore City?
@@ -108,27 +124,33 @@ NEI.balq5 <- fjoined.q5 %>%
 
 NEI.balq5$city <- "Baltimore"
 
+png(filename="plot5.png")
+
 q5 <- ggplot(NEI.balq5, aes(x = year, y = Emissions))
 q5 <- q5 + geom_line() + xlab("Year") + ylab("Emissions in tons") + ggtitle("Motor Emissions in Baltimore City, Maryland")
 q5
 
+dev.off()
 ##### Q6 ###
 # Compare emissions from motor vehicle sources in Baltimore City with emissions from motor vehicle 
 # sources in Los Angeles County, California (fips == "06037"). Which city has seen greater changes 
 # over time in motor vehicle emissions?
 #####
   
-
 NEI.sfQ6 <- fjoined.q5 %>% 
   filter(fips == "06037") %>%
   group_by(year) %>% 
   summarise(Emissions = sum(Emissions)) 
 
-NEI.sfQ6$city <- "SF"
+NEI.sfQ6$city <- "SF" # see previous Q5
 
 bothNEI <- rbind(NEI.sfQ6,NEI.balq5)
+
+png(filename="plot6.png")
 
 q6 <- ggplot(bothNEI, aes(x = year, y = Emissions, color = city, group = city))
 q6 <- q6 + geom_line() + xlab("Year") + ylab("Emissions in tons") + ggtitle("Motor Emissions in San Francisco")
 q6 <- q6 + coord_cartesian(ylim = c(0, 1600)) + scale_y_continuous(breaks = seq(0, 1600, 200))
 q6
+
+dev.off()
