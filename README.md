@@ -1,4 +1,4 @@
-R Courses
+R & Statistics courses
 ====
 
 Here you may find all exercises with R from :
