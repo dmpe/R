@@ -1,18 +1,41 @@
+#################
+#### Q1  ########
+#################
 
 library(AppliedPredictiveModeling)
-data(segmentationOriginal)
 library(caret)
+library(rpart)
+library(rattle)
+data(segmentationOriginal)
+set.seed(125)
 
+trainingSub <- subset(segmentationOriginal, segmentationOriginal$Case == "Train")
+testingSub <- subset(segmentationOriginal, segmentationOriginal$Case == "Test")
 
+trCl <- train(Class ~ ., method="rpart", data=trainingSub)
 
+print(trCl$finalModel)
 
+plot(trCl$finalModel, uniform=TRUE, main="Classification Tree")
+text(trCl$finalModel,  use.n=TRUE, all=TRUE, cex=0.8)
 
+fancyRpartPlot(trCl$finalModel)
+predictedVal <- predict(trCl,newdata=testingSub)
+
+fancyRpartPlot(predictedVal)
+
+#################
+#### Q3  ########
+#################
 
 library(pgmm)
 data(olive)
 olive = olive[,-1]
 
 
+trCl <- train(Area ~ ., method="rpart", data=trainingSub)
+
+print(trCl$finalModel)
 
 library(ElemStatLearn)
 data(SAheart)
