@@ -1,14 +1,14 @@
 library(caret)
 set.seed(5152)
 
-# pml.testing <- read.csv("PracticalML/project/pml-testing.csv")
+# pml.testing <- read.csv("PracticalML/project/pml-testing.csv",  na.strings = "NA")
 # sapply(pml.testing, class)
-pml.training <- read.csv("PracticalML/project/pml-training.csv")
+pml.training <- read.csv("PracticalML/project/pml-training.csv", na.strings = c("NA", "#DIV/0!"))
 # sapply(pml.training, class)
 
 
 inTrain <- createDataPartition(y = pml.training$classe,
-                               p = 0.65,
+                               p = 0.7,
                                list = FALSE)
 training <- pml.training[inTrain,]
 testing <- pml.training[-inTrain,]
