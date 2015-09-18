@@ -1,9 +1,7 @@
 library(caret)
 library(e1071)
-library(doMC)
 library(rpart)
 library(randomForest)
-registerDoMC(cores = 2)
 set.seed(5152)
 
 pml.testing <- read.csv("PracticalML/project/pml-testing.csv",  na.strings = c("NA", ""))
@@ -81,14 +79,14 @@ ppModel1.4 <- predict(modelfitGBM, testingSUB)
 # ppModel1.5 <- predict(modelfitSVM, testingSUB)
 
 confusionMatrix(ppModel1.1, testingSUB$classe)
-confusionMatrix(pml.testing$classe, ppModel1.2) # this
+confusionMatrix(testingSUB$classe, ppModel1.2) # this
 confusionMatrix(testingSUB$classe, ppModel1.3)
-confusionMatrix(test$classe, ppModel1.4) # this
-# confusionMatrix(test$classe, ppModel1.5)
+confusionMatrix(testingSUB$classe, ppModel1.4) # this
+# confusionMatrix(testingSUB$classe, ppModel1.5)
 
-predDF <- data.frame(ppModel1.2,ppModel1.4,classe=test$classe)
-combModFit <- train(classe ~.,method="rf",data=predDF)
-combPred <- predict(combModFit, test)
-confusionMatrix(test$classe, combPred)
+predDF <- data.frame(ppModel1.2,ppModel1.4,classe=testingSUB$classe)
+combModFit <- train(classe ~ ., method="rf", data=predDF)
+combPred <- predict(combModFit, testingSUB)
+confusionMatrix(testingSUB$classe, combPred)
 
 
