@@ -1,7 +1,11 @@
-library(caret)
 library(e1071)
 library(rpart)
 library(randomForest)
+library(caret)
+library(foreach)
+# names(getModelInfo())
+rfParam <- expand.grid(mtry =100, importance=TRUE)
+
 set.seed(5152)
 
 pml.testing <- read.csv("PracticalML/project/pml-testing.csv",  na.strings = c("NA", ""))
@@ -65,7 +69,7 @@ testingSUB <- pml.training[-inTrain,]
 
 
 modelfitKNN <- train(classe ~ ., data = trainingSUB, method = "knn")
-modelfitRF <- train(classe ~ ., data = trainingSUB, method = "rf")
+modelfitRF <- train(classe ~ ., data = trainingSUB, method = "parRF", tuneGrid=rfParam)
 modelfitRPART <- train(classe ~ ., data = trainingSUB, method = "rpart")
 modelfitGBM <- train(classe ~ ., data = trainingSUB, method = "gbm")
 # modelfitSVM <- svm(train$classe ~ ., data = trainingSUB)
