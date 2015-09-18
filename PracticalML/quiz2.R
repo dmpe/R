@@ -1,7 +1,6 @@
 #################
 #### Q1  ########
 #################
-
 library(AppliedPredictiveModeling)
 library(caret)
 data(AlzheimerDisease)

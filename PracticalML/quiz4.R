@@ -77,19 +77,26 @@ plot.enet(lm1$finalModel, xvar="penalty", use.color=T)
 #################
 #### Q4  ########
 #################
-library(lubridate)  # For year() function below
-read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/gaData.csv")
+library(lubridate)
+library(forecast)
+dat <- read.csv("https://d396qusza40orc.cloudfront.net/predmachlearn/gaData.csv")
 training = dat[year(dat$date) < 2012,]
 testing = dat[(year(dat$date)) > 2011,]
 tstrain = ts(training$visitsTumblr)
 
+bt <- bats(tstrain)
+ft <- forecast(bt, level = 0.95, h = nrow(testing))
+plot(ft)
+accuracy(ft, testing$visitsTumblr)
 
+count <- 0
+for (i in 1:nrow(testing)) {
+  if(testing$visitsTumblr[i] > ft$lower[i] & testing$visitsTumblr[i] < ft$upper[i]) {
+    count <- count + 1
+  }
+}
 
-
-
-
-
-
+1-count/nrow(testing)
 
 #################
 #### Q5  ########
@@ -103,7 +110,7 @@ training = concrete[ inTrain,]
 testing = concrete[-inTrain,]
 set.seed(325)
 
+sv <- svm(CompressiveStrength ~ ., data = training)
+pred <- predict(sv, testing)
 
-
-
-
+sqrt( mean( (pred-testing$CompressiveStrength)^2 , na.rm = TRUE ) )

@@ -72,8 +72,6 @@ missClass(testSA$chd, predict(trainModel, testSA))
 #################
 #### Q5  ########
 #################
-
-
 library(ElemStatLearn)
 data(vowel.train)
 data(vowel.test) 
@@ -84,6 +82,4 @@ set.seed(33833)
 
 trainMod <- train(y ~ . , data = vowel.train, method = "rf")
 varImp(trainMod)
-
-
 

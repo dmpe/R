@@ -12,4 +12,5 @@ Encoding: UTF-8
 RnwWeave: knitr
 LaTeX: pdfLaTeX
 
-AutoAppendNewline: Yes
+StripTrailingWhitespace: Yes
+LineEndingConversion: None
