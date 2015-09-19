@@ -7,10 +7,13 @@ library(foreach)
 
 set.seed(5152)
 
+# load both of them
 pml.testing <- read.csv("PracticalML/project/pml-testing.csv",  na.strings = c("NA", ""))
 pml.training <- read.csv("PracticalML/project/pml-training.csv", na.strings = c("NA", "#DIV/0!", ""))
+# sapply(pml.training, class)
+# sapply(pml.testing, class)
 
-# delete factors + logicals
+# delete factors + logicals + NZV
 # https://topepo.github.io/caret/preprocess.html#nzv
 pml.training <- pml.training[,!names(pml.training) %in% c("user_name", "new_window", "cvtd_timestamp",
                                                           "skewness_yaw_dumbbell", "kurtosis_yaw_dumbbell",
@@ -29,22 +32,21 @@ pml.testing <- pml.testing[,!names(pml.testing) %in% c("user_name", "new_window"
 # pml.testing <- Filter(function(x)all(is.na(x)), pml.testing)
 # pml.training <- Filter(function(x)!all(is.na(x)), pml.training)
 
+# select only those columns which have 0 NA values in them (columnwise, not rowwise)
 pml.training <- pml.training[, colSums(is.na(pml.training)) == 0]
 pml.testing <- pml.testing[, colSums(is.na(pml.testing)) == 0]
 
-# nzv <- nearZeroVar(pml.training)
-# nzv2 <- nearZeroVar(pml.testing)
-# pml.training <- pml.training[, -nzv]
-# pml.testing <- pml.testing[, -nzv2]
+# This will not result in to the same number of variables. Can be used in part.
+# nzv <- nearZeroVar(pml.training, saveMetrics = T)
+# nzv2 <- nearZeroVar(pml.testing, saveMetrics = T)
+# pml.training <- pml.training[, -nearZeroVar(pml.training)]
+# pml.testing <- pml.testing[, -nearZeroVar(pml.testing)]
 
-# sapply(pml.training, class)
-# sapply(pml.testing, class)
-#
+
 # inBuild <- createDataPartition(y=pml.training$classe,p=0.6, list=FALSE)
 # validation <- Wage[-inBuild,];
 # buildData <- Wage[inBuild,]
-#
-# inTrain <- createDataPartition(y=buildData$wage, p=0.6, list=FALSE)
+# inTrain <- createDataPartition(y=pml.training$classe, p=0.6, list=FALSE)
 # training <- buildData[inTrain,];
 # testing <- buildData[-inTrain,]
 
@@ -54,18 +56,9 @@ inTrain <- createDataPartition(y = pml.training$classe, p = 0.6, list = FALSE)
 trainingSUB <- pml.training[inTrain,]
 testingSUB <- pml.training[-inTrain,]
 
-### all
-# preProALL <- preProcess(training[,!names(training) %in% "classe"], method = "pca", thresh = 0.85, na.remove = TRUE)
-# trainPCALL <- predict(preProALL, training)
-# modelfitALL <- train(training$classe ~ ., data = trainPCALL, method = "knn", prePro="pca")
-#
-# testPC <- predict(prePro, testing[, grep("IL|diagnosis", names(testing))][2:13])
-# confusionMatrix(testing$diagnosis,predict(modelfit,testPC))
-#
 
 ### all non nulls
-# nzv <- nearZeroVar(trainingSUB, saveMetrics= TRUE)
-
+# takes very long on 2 Core PC + 4GB ram
 
 modelfitKNN <- train(classe ~ ., data = trainingSUB, method = "knn")
 modelfitRF <- train(classe ~ ., data = trainingSUB, method = "rf")
@@ -84,9 +77,10 @@ ppModel1.4 <- predict(modelfitGBM, testingSUB)
 confusionMatrix(ppModel1.1, testingSUB$classe)
 confusionMatrix(testingSUB$classe, ppModel1.2) # this
 confusionMatrix(testingSUB$classe, ppModel1.3)
-confusionMatrix(testingSUB$classe, ppModel1.4)
+confusionMatrix(testingSUB$classe, ppModel1.4) # or almost this
 # confusionMatrix(testingSUB$classe, ppModel1.5)
 
+# Unnecessary.
 # predDF <- data.frame(ppModel1.2,ppModel1.4,classe=testingSUB$classe)
 # combModFit <- train(classe ~ ., method="rf", data=predDF)
 # combPred <- predict(combModFit, testingSUB)
