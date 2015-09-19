@@ -2,7 +2,7 @@
 
 source("~/Documents/R/PracticalML/project/project.R")
 
-ppModel1.2
+ppModel1.22
 
 
 pml_write_files = function(x){
@@ -15,8 +15,4 @@ pml_write_files = function(x){
   setwd("~/Documents/R")
 }
 
-pml_write_files(ppModel1.2)
-
-
-
-
+pml_write_files(ppModel1.22)

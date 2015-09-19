@@ -1,10 +1,9 @@
 library(e1071)
 library(rpart)
+library(gbm)
 library(randomForest)
 library(caret)
 library(foreach)
-# names(getModelInfo())
-rfParam <- expand.grid(mtry =100, importance=TRUE)
 
 set.seed(5152)
 
@@ -14,18 +13,18 @@ pml.training <- read.csv("PracticalML/project/pml-training.csv", na.strings = c(
 # delete factors + logicals
 # https://topepo.github.io/caret/preprocess.html#nzv
 pml.training <- pml.training[,!names(pml.training) %in% c("user_name", "new_window", "cvtd_timestamp",
-                                              "skewness_yaw_dumbbell", "kurtosis_yaw_dumbbell",
-                                              "skewness_yaw_belt", "kurtosis_yaw_belt",
-                                              "kurtosis_yaw_forearm", "skewness_yaw_forearm",
-                                              "amplitude_yaw_belt", "amplitude_yaw_dumbbell",
-                                              "amplitude_yaw_forearm", "X")]
+                                                          "skewness_yaw_dumbbell", "kurtosis_yaw_dumbbell",
+                                                          "skewness_yaw_belt", "kurtosis_yaw_belt",
+                                                          "kurtosis_yaw_forearm", "skewness_yaw_forearm",
+                                                          "amplitude_yaw_belt", "amplitude_yaw_dumbbell",
+                                                          "amplitude_yaw_forearm", "X")]
 
 pml.testing <- pml.testing[,!names(pml.testing) %in% c("user_name", "new_window", "cvtd_timestamp",
-                                           "skewness_yaw_dumbbell", "kurtosis_yaw_dumbbell",
-                                           "skewness_yaw_belt", "kurtosis_yaw_belt",
-                                           "kurtosis_yaw_forearm", "skewness_yaw_forearm",
-                                           "amplitude_yaw_belt", "amplitude_yaw_dumbbell",
-                                           "amplitude_yaw_forearm", "X")]
+                                                       "skewness_yaw_dumbbell", "kurtosis_yaw_dumbbell",
+                                                       "skewness_yaw_belt", "kurtosis_yaw_belt",
+                                                       "kurtosis_yaw_forearm", "skewness_yaw_forearm",
+                                                       "amplitude_yaw_belt", "amplitude_yaw_dumbbell",
+                                                       "amplitude_yaw_forearm", "X")]
 
 # pml.testing <- Filter(function(x)all(is.na(x)), pml.testing)
 # pml.training <- Filter(function(x)!all(is.na(x)), pml.training)
@@ -69,7 +68,7 @@ testingSUB <- pml.training[-inTrain,]
 
 
 modelfitKNN <- train(classe ~ ., data = trainingSUB, method = "knn")
-modelfitRF <- train(classe ~ ., data = trainingSUB, method = "parRF", tuneGrid=rfParam)
+modelfitRF <- train(classe ~ ., data = trainingSUB, method = "rf")
 modelfitRPART <- train(classe ~ ., data = trainingSUB, method = "rpart")
 modelfitGBM <- train(classe ~ ., data = trainingSUB, method = "gbm")
 # modelfitSVM <- svm(train$classe ~ ., data = trainingSUB)
@@ -85,12 +84,12 @@ ppModel1.4 <- predict(modelfitGBM, testingSUB)
 confusionMatrix(ppModel1.1, testingSUB$classe)
 confusionMatrix(testingSUB$classe, ppModel1.2) # this
 confusionMatrix(testingSUB$classe, ppModel1.3)
-confusionMatrix(testingSUB$classe, ppModel1.4) # this
+confusionMatrix(testingSUB$classe, ppModel1.4)
 # confusionMatrix(testingSUB$classe, ppModel1.5)
 
-predDF <- data.frame(ppModel1.2,ppModel1.4,classe=testingSUB$classe)
-combModFit <- train(classe ~ ., method="rf", data=predDF)
-combPred <- predict(combModFit, testingSUB)
-confusionMatrix(testingSUB$classe, combPred)
+# predDF <- data.frame(ppModel1.2,ppModel1.4,classe=testingSUB$classe)
+# combModFit <- train(classe ~ ., method="rf", data=predDF)
+# combPred <- predict(combModFit, testingSUB)
+# confusionMatrix(testingSUB$classe, combPred)
 
-
+ppModel1.22 <- predict(modelfitRF, pml.testing)
