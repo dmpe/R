@@ -55,34 +55,11 @@ hw1_data.sub1 <- subset(hw1_data, Ozone > 31 & Temp > 90)
 mean(hw1_data.sub1$Solar.R)
 
 # What is the mean of "Temp" when "Month" is equal to 6? 
+hw1_data.sub2 <- subset(na.omit(hw1_data), Month == 6)
 mean(hw1_data.sub2$Temp)
 
 # What was the maximum ozone value in the month of May (i.e. Month = 5)?
 hw1_data.sub3 <- subset(na.omit(hw1_data), Month == 5)
 max(hw1_data.sub3$Ozone)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
