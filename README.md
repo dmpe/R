@@ -1,4 +1,4 @@
-R & Statistics courses
+R & Statistics courses & Analysis
 ====
 
 Here you may find all exercises with R from :
@@ -10,5 +10,6 @@ Here you may find all exercises with R from :
 5.  [Exploratory Data Analysis - Roger Peng et al. @ JHU](https://www.coursera.org/course/exdata)
 6.  [Practical Machine Learning - Jeff Leek et al. @ JHU](https://www.coursera.org/course/predmachlearn)
 7.  [Programming for Everybody (Getting Started with Python)](https://www.coursera.org/learn/python/)
+8.  [Crowdsourcing Data Analysis 2, Phase 2: Explaining Variability in Analyses and Results](https://docs.google.com/document/d/1fXQBLdWydISskOKhoq8gl5unuwsv7VA3pkKY4IWFS6o/edit)
 
-My IDE of choice is the best [RStudio](http://www.rstudio.com/). Just try it and follow its development [here](https://www.github.com/rstudio/rstudio) 
+My IDE of choice is [RStudio](http://www.rstudio.com/). Just try it and follow its development [here](https://www.github.com/rstudio/rstudio) 

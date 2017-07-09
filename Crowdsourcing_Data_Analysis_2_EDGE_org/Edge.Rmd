@@ -1,0 +1,175 @@
+---
+title: "Analysis of EDGE Data"
+author: "DMPE"
+date: "June 24, 2017"
+output: 
+  html_document: 
+    df_print: default
+    highlight: textmate
+    number_sections: yes
+    theme: readable
+    toc: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Tasks/Objectives
+
+Try too confirm or rebut following:
+
+> Hypothesis 1: "A woman's tendency to participate actively in the conversation correlates positively with the number of females in the discussion."
+
+> Hypothesis 2: "Higher status participants are more verbose than are lower status participants."
+ 
+When finished, report your results using this short survey <https://esmt.az1.qualtrics.com/jfe/form/SV_eaOyF0q39J6CVKZ>
+
+
+## Settings
+```{r}
+options(tibble.print_max = Inf)
+options(tibble.width = Inf)
+```
+
+
+## Libraries
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(plotly)
+```
+
+## Data
+
+```{r, eval=T, echo=T}
+edgeDS <- suppressWarnings(suppressMessages(read_csv("~/Downloads/edge1.1.csv", na = "NA")))
+edgeDSsmall <- suppressWarnings(suppressMessages(read_csv("~/Downloads/edge1.1.csv", na = "NA")[1:10,]))
+```
+
+## Deal with data problems
+
+`col_types = cols(PhD_Year = col_integer())` should not be applied because it is largely chars that are included
+
+```{r, eval=F}
+print(problems(edgeDS))
+```
+
+```{r}
+edgeDS[4305,23]
+```
+
+Apply factors to various columns where it makes sence
+
+```{r}
+cols <- c("Type", "Live", "Role", "TwoAuthors", "Limited_Information", "Female", "Male", "Academic", "Job_Title_S", "Job_Title_S_num", "Department_S" ,"Department_S_num" ,"Discipline", "HavePhD", "AuthorAndCommenter", "PhD_Institution_SR_Bin", "Workplace_SR_Bin", "SR_Ranking_Dif", "PhD_Institution_US_IR_Bin", "Workplace_US_IR_Bin", "USA_I_Ranking_Dif", "PhD_Institution_US_Bin", "Workplace_US_Bin", "USA_Ranking_Dif", "AcademicHierarchyStrict")
+
+edgeDS[cols] <- lapply(edgeDS[cols], factor)
+```
+
+
+## Shows some examples of data
+
+```{r,eval=F}
+head(edgeDS,1)
+head(str(edgeDS))
+```
+
+
+## Summary of data
+```{r, eval=FALSE}
+summary(edgeDS[,1:50])
+```
+
+## My own questions
+
+### Q1: Who many (unique) contributors are there in the dataset ?
+
+```{r}
+head(table(edgeDS$Id))
+length(unique(edgeDS$Id))
+```
+
+And overall ? 
+
+```{r}
+head(rapply(edgeDS,function(x)length(unique(x))))
+```
+
+### Q2: If you are academician, does it mean that the debate size will increase
+
+<https://stackoverflow.com/a/41735721>
+
+```{r, eval=F}
+edgeDS_academiciansInDebates <- edgeDS %>% 
+  filter(Type == 2) %>% 
+  select(ThreadId, DebateSize, Academic) %>% 
+  group_by(ThreadId, DebateSize, Academic) %>% 
+  tally %>% 
+  spread(Academic, n, fill = 0)
+  
+colnames(edgeDS_academiciansInDebates)[3] <- "NumberOf_Non_Academicians"
+colnames(edgeDS_academiciansInDebates)[4] <- "NumberOf_Academicians"
+colnames(edgeDS_academiciansInDebates)[5] <- "Unknown"
+```
+
+Plot it!
+0 = Non_Academicians
+1 = Academicians
+
+```{r}
+edgeDS_academiciansInDebates_plot <- edgeDS %>% 
+  filter(Type == 2) %>% 
+  group_by(ThreadId, DebateSize, Academic)
+
+pic <- ggplot(edgeDS_academiciansInDebates_plot, aes_string("ThreadId", "DebateSize")) + geom_point()
+pic + facet_grid(. ~ Academic)
+ggplotly(pic)
+```
+
+## Hypothesis 1: Conversations 
+
+> Hypothesis 1: "A woman's tendency to participate actively in the conversation correlates positively with the number of (i guess unique) females in the discussion."
+
+Opportunities to group by: Live, Academia, Two authors, HavePhD, AuthorAndCommenter
+
+First, filter such a table. 
+
+```{r}
+edgeDS_conversations <- edgeDS %>% filter(Type == 2)
+edgeDS_conversationsSmall <- edgeDS_conversations[1:50,]
+```
+
+```{r}
+table(edgeDS_conversations$Live)
+```
+
+### Number of women per threadID/conversation
+
+
+```{r}
+WomenPerThreadID <- edgeDS %>% 
+  select(ThreadId, Male_Contributions, Female_Contributions, FemaleParticipation, 
+                                                    DebateSize, UniqueContributors, UniqueMaleContributors, UniqueFemaleContributors, UniqueFemaleParticipation) %>% 
+  distinct(.keep_all = TRUE)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
