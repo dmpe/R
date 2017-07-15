@@ -41,94 +41,143 @@ options(tibble.width = Inf)
 library(tidyverse)
 library(ggplot2)
 library(plotly)
+library(ggthemes)
+library(reshape2)
+library(scales)
+library(corrplot)
+library(mice)
+library(mi)
 ```
 
 ## Data
 
 ```{r, eval=T, echo=T}
 edgeDS <- suppressWarnings(suppressMessages(read_csv("~/Downloads/edge1.1.csv", na = "NA")))
-edgeDSsmall <- suppressWarnings(suppressMessages(read_csv("~/Downloads/edge1.1.csv", na = "NA")[1:10,]))
 ```
 
 ## Deal with data problems
 
 `col_types = cols(PhD_Year = col_integer())` should not be applied because it is largely chars that are included
 
-```{r, eval=F}
+```{r, eval=FALSE, echo=F}
 print(problems(edgeDS))
-```
-
-```{r}
 edgeDS[4305,23]
 ```
 
-Apply factors to various columns where it makes sence
+
+### Apply factors to various columns where it makes sence. 
+
+Also rename variable Academic from 0/1 to 
+
+0 = Non_Academicians
+
+1 = Academicians
 
 ```{r}
 cols <- c("Type", "Live", "Role", "TwoAuthors", "Limited_Information", "Female", "Male", "Academic", "Job_Title_S", "Job_Title_S_num", "Department_S" ,"Department_S_num" ,"Discipline", "HavePhD", "AuthorAndCommenter", "PhD_Institution_SR_Bin", "Workplace_SR_Bin", "SR_Ranking_Dif", "PhD_Institution_US_IR_Bin", "Workplace_US_IR_Bin", "USA_I_Ranking_Dif", "PhD_Institution_US_Bin", "Workplace_US_Bin", "USA_Ranking_Dif", "AcademicHierarchyStrict")
 
 edgeDS[cols] <- lapply(edgeDS[cols], factor)
+
+# transform academic variable
+
+edgeDS$Academic <- recode(edgeDS$Academic, `1` = "Academicians", `0` = "Non_Academicians", .default = "Unknown")
+
+# transform year
+# numToChar <- function(x) { ux = unique(x); formatC(ux)[match(x, ux)] }
+# edgeDS$Year <- year(as.Date(numToChar(edgeDS$Year), "%Y"))
+
 ```
 
 
 ## Shows some examples of data
 
-```{r,eval=F}
+```{r,eval=FALSE, echo=F}
 head(edgeDS,1)
 head(str(edgeDS))
 ```
 
 
 ## Summary of data
-```{r, eval=FALSE}
+```{r, eval=FALSE, echo=F}
 summary(edgeDS[,1:50])
 ```
 
 ## My own questions
 
-### Q1: Who many (unique) contributors are there in the dataset ?
-
 ```{r}
-head(table(edgeDS$Id))
-length(unique(edgeDS$Id))
+head(table(edgeDS$Id)) # Who many times have contributors voiced their opinions in all discussions
+length(unique(edgeDS$Id)) # How many unique participitants are there ?
 ```
 
-And overall ? 
+And overall number of unique values per each variable ? 
 
 ```{r}
 head(rapply(edgeDS,function(x)length(unique(x))))
 ```
 
-### Q2: If you are academician, does it mean that the debate size will increase
+### Q2: If you are academician, does it mean that the debate size will increase?
 
-<https://stackoverflow.com/a/41735721>
+Let's find it out :)
 
-```{r, eval=F}
+
+```{r, eval=T}
 edgeDS_academiciansInDebates <- edgeDS %>% 
-  filter(Type == 2) %>% 
-  select(ThreadId, DebateSize, Academic) %>% 
-  group_by(ThreadId, DebateSize, Academic) %>% 
+  filter(Type == 2) %>% # just "conversations"
+  select(Year, ThreadId, DebateSize, Academic) %>% 
+  group_by(Year, ThreadId, DebateSize, Academic) %>% 
   tally %>% 
   spread(Academic, n, fill = 0)
   
-colnames(edgeDS_academiciansInDebates)[3] <- "NumberOf_Non_Academicians"
-colnames(edgeDS_academiciansInDebates)[4] <- "NumberOf_Academicians"
-colnames(edgeDS_academiciansInDebates)[5] <- "Unknown"
+colnames(edgeDS_academiciansInDebates)[4] <- "NumberOf_Non_Academicians"
+colnames(edgeDS_academiciansInDebates)[5] <- "NumberOf_Academicians"
+colnames(edgeDS_academiciansInDebates)[6] <- "Unknown"
+# <https://stackoverflow.com/a/41735721>
+
 ```
 
 Plot it!
-0 = Non_Academicians
-1 = Academicians
 
 ```{r}
-edgeDS_academiciansInDebates_plot <- edgeDS %>% 
-  filter(Type == 2) %>% 
-  group_by(ThreadId, DebateSize, Academic)
+year_aca_sum <- edgeDS_academiciansInDebates[,c(1,5)] %>% 
+  group_by(Year) %>% 
+  summarise(NumberOf_Academicians_all = sum(NumberOf_Academicians))
 
-pic <- ggplot(edgeDS_academiciansInDebates_plot, aes_string("ThreadId", "DebateSize")) + geom_point()
-pic + facet_grid(. ~ Academic)
-ggplotly(pic)
+ggplot(year_aca_sum, aes(x = Year, y = NumberOf_Academicians_all)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = T, show.legend = TRUE, span = 0.3) +
+  scale_x_continuous(breaks = pretty(year_aca_sum$Year, n = 19)) +
+  scale_y_continuous(breaks = pretty(year_aca_sum$NumberOf_Academicians_all, 20)) + 
+  scale_fill_ptol() + ggtitle("Number of academicians in all conversations per Year", subtitle = "has very small growing tendency. Or, well, rather random") + ylab("Number of Academicians") + 
+  theme_minimal()
 ```
+
+
+```{r}
+year_aca_byGroup <- edgeDS_academiciansInDebates[,c(1,3,4,5,6)] %>% 
+  group_by(Year) %>% 
+  summarise(DebateSize = sum(DebateSize), 
+            Academicians = sum(NumberOf_Academicians), 
+            Non_Academicians = sum(NumberOf_Non_Academicians), 
+            Unknown = sum(Unknown))
+
+year_aca_byGroup.long <- melt(year_aca_byGroup, id.vars = c(1,2))
+
+ggplot(year_aca_byGroup.long, aes(x = Year, y = value, fill = variable)) + 
+  geom_col() + scale_y_continuous(breaks = seq(0, 1300, by = 100)) + 
+  ggtitle("Number and type of debaters per Year") + ylab("Number of Participitans") + labs(fill = "Type") + theme_minimal() + scale_fill_ptol() 
+```
+
+#### What is proportion of academicians in the debate, per year ?
+
+```{r, echo=F}
+percantage <- percent(year_aca_byGroup$Academicians / year_aca_byGroup$DebateSize)
+proportions_in_debates <- cbind(year_aca_byGroup$Year, percantage)
+```
+
+```{r}
+head(proportions_in_debates, 7)
+```
+
 
 ## Hypothesis 1: Conversations 
 
@@ -140,7 +189,6 @@ First, filter such a table.
 
 ```{r}
 edgeDS_conversations <- edgeDS %>% filter(Type == 2)
-edgeDS_conversationsSmall <- edgeDS_conversations[1:50,]
 ```
 
 ```{r}
