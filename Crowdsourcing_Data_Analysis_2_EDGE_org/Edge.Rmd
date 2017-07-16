@@ -47,6 +47,8 @@ library(scales)
 library(corrplot)
 library(mice)
 library(mi)
+library(VIM)
+library(Amelia)
 ```
 
 ## Data
@@ -59,10 +61,29 @@ edgeDS <- suppressWarnings(suppressMessages(read_csv("~/Downloads/edge1.1.csv", 
 
 `col_types = cols(PhD_Year = col_integer())` should not be applied because it is largely chars that are included
 
-```{r, eval=FALSE, echo=F}
+```{r, eval=FALSE, echo=T}
 print(problems(edgeDS))
 edgeDS[4305,23]
 ```
+
+## Missing values
+
+```{r}
+missing_data <- edgeDS[!complete.cases(edgeDS),]
+nrow(missing_data) # number of rows that have missing value
+
+mis <- edgeDS[, -grep("dummy|Unique|Contributions|Numerals", colnames(edgeDS))]
+
+arrange(aggr(mis, col=mdc(1:2), numbers=TRUE, sortVars=TRUE, labels=names(mis), 
+        cex.axis=.4, gap=3, prop = F, plot = F)$missings, desc(Count))[1:30, ]
+
+aggr(mis[, 1:90], col=mdc(1:2), numbers=TRUE, sortVars=TRUE, labels=names(mis), 
+        cex.axis=.4, gap=3, prop = F, plot = T)
+
+#missmap(mis)
+#head(md.pattern(mis))
+```
+
 
 
 ### Apply factors to various columns where it makes sence. 
@@ -91,14 +112,14 @@ edgeDS$Academic <- recode(edgeDS$Academic, `1` = "Academicians", `0` = "Non_Acad
 
 ## Shows some examples of data
 
-```{r,eval=FALSE, echo=F}
+```{r,eval=FALSE, echo=T}
 head(edgeDS,1)
 head(str(edgeDS))
 ```
 
 
 ## Summary of data
-```{r, eval=FALSE, echo=F}
+```{r, eval=FALSE, echo=T}
 summary(edgeDS[,1:50])
 ```
 
@@ -122,7 +143,7 @@ Let's find it out :)
 
 ```{r, eval=T}
 edgeDS_academiciansInDebates <- edgeDS %>% 
-  filter(Type == 2) %>% # just "conversations"
+  filter(Type == 2, TwoAuthors == 0) %>% # just "conversations" written by 1 author
   select(Year, ThreadId, DebateSize, Academic) %>% 
   group_by(Year, ThreadId, DebateSize, Academic) %>% 
   tally %>% 
