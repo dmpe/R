@@ -1,7 +1,7 @@
 ---
-title: "Analysis of EDGE Data"
+title: "Analysis of Edge.org Data"
 author: "DMPE @ GitHub"
-date: "June 24, 2017"
+date: "August 5, 2017"
 output: 
   html_document: 
     df_print: default
@@ -16,13 +16,15 @@ editor_options:
 
 ```{r setup, include=F}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+set.seed(1234)
 ```
 
 # Tasks/Objectives - Crowdsourcing Data Analysis 2
 
 Description set out in <https://docs.google.com/document/d/1fXQBLdWydISskOKhoq8gl5unuwsv7VA3pkKY4IWFS6o/edit>.
 
-In short, tring too confirm or rebut following:
+In short, trying to confirm or rebut following:
 
 > Hypothesis 1: "A woman's tendency to participate actively in the conversation correlates positively with the number of females in the discussion."
 
@@ -33,10 +35,12 @@ When finished, the goal is report my results using this (short) survey: <https:/
 ## Settings
 
 > You can control the default appearance with options:
+
 - `options(tibble.print_max = n, tibble.print_min = m)`: if there are more than n rows, print only the first m rows. Use `options(tibble.print_max = Inf)` to always show all rows.
+
 - `options(tibble.width = Inf)` will always print all columns, regardless of the width of the screen.
 
-From [source](https://cran.r-project.org/web/packages/tibble/vignettes/tibble.html)
+From [vignette](https://cran.r-project.org/web/packages/tibble/vignettes/tibble.html)
 
 ```{r}
 #options(tibble.print_max = Inf)
@@ -47,19 +51,28 @@ From [source](https://cran.r-project.org/web/packages/tibble/vignettes/tibble.ht
 ## Loading huge number of libraries
 
 ```{r, message=FALSE, warning=FALSE}
+# data wrangling
 library(tidyverse)
-library(ggplot2)
-library(plotly)
-library(ggthemes)
 library(reshape2)
 library(scales)
-library(corrplot)
-library(mice)
-library(mi)
+
+# imputation & missingness
+#library(mice)
+#library(mi)
 library(VIM)
-library(Amelia)
+#library(Amelia)
+
+# markdown Rmd + table styling
 library(knitr)
 library(kableExtra)
+# for plotting - arranging/positioning
+library(grid)
+library(gridExtra)
+
+# plotting
+library(GGally)
+library(ggthemes)
+library(plotly)
 ```
 
 ## Read Data
@@ -69,7 +82,7 @@ edgeDS <- read_csv("edge1.1EditedFixed.csv", na = c("NA", "", " ", "#N/A"), trim
 edgeDSsmall <- read_csv("edge1.1EditedFixed.csv", na = c("NA", "", " ", "#N/A"), trim_ws = T)[1:30,]
 ```
 
-## Pre-processing
+## First some pre-processing
 
 ### Deal with data problems
 
@@ -77,14 +90,14 @@ edgeDSsmall <- read_csv("edge1.1EditedFixed.csv", na = c("NA", "", " ", "#N/A"),
 ```{r, eval=T, echo=T}
 # print(problems(edgeDS))
 
-# Either delete or fix 1817 row. I fixed it in csv. 
-# edgeDS <- edgeDS[-c(1817),] # delete row No. 1817 because it is broken mess
+# We can either delete or fix row no. 1817 because it is broken mess. I fixed it in csv. 
+# edgeDS <- edgeDS[-c(1817),]
+
+# Replace Not Available & Pending with NA
 
 edgeDS$PhD_Year[edgeDS$PhD_Year == "Not Available"] <- NA
 edgeDS$PhD_Year[edgeDS$PhD_Year == "Pending"] <- NA
 ```
-
-`col_types = cols(PhD_Year = col_integer())` can be now applied
 
 ### Missing values
 
@@ -92,12 +105,12 @@ edgeDS$PhD_Year[edgeDS$PhD_Year == "Pending"] <- NA
 missing_data <- edgeDS[!complete.cases(edgeDS),]
 nrow(missing_data) # number of rows that have some missing values
 
-# delete those which contain...
+# delete those columns which contain...
 mis <- edgeDS[, -grep("dummy|Unique|Contributions|Numerals", colnames(edgeDS))]
 
 # list variables with most missing values
 arrange(aggr(mis, col=mdc(1:2), numbers=TRUE, sortVars=TRUE, labels=names(mis), 
-        cex.axis = .4, gap=3, prop = F, plot = F)$missings, desc(Count))[1:45, ]
+        cex.axis = .4, gap=3, prop = F, plot = F)$missings, desc(Count))[1:43, ]
 ```
 
 
@@ -107,8 +120,11 @@ missmap(mis)
 head(md.pattern(mis))
 ```
 
+```{r include=FALSE}
+rm(mis, missing_data)
+```
 
-### Apply factors to various columns where it makes sence. 
+### Apply factors to various columns where it makes sense
 
 And rename variable `Academic` from 0/1 to more descriptive
 
@@ -122,21 +138,21 @@ cols <- c("Type", "Live", "Role", "TwoAuthors", "Limited_Information", "Female",
 edgeDS[cols] <- lapply(edgeDS[cols], factor)
 ```
 
-Transform 2 variables from **binary (factor)** to more **binary (character)** to give them more meaning.
+Transform two variables from **factor** to **character** to give them more meaning.
 
 ```{r}
 edgeDS$Academic <- recode(edgeDS$Academic, `1` = "Academicians", `0` = "Non_Academicians", .default = "Unknown")
-edgeDS$Gender <- recode(edgeDS$Female, `1` = "Female", `0` = "Male")
+edgeDS$Gender <- recode(edgeDS$Female, `1` = "Female", `0` = "Male", .default = "Unknown")
 ```
 
-Drop female & male columns and reorder dataframe
+Drop now female & male columns and reorder data frame.
 
 ```{r}
 edgeDS <- edgeDS[, !(names(edgeDS) %in% c("Female", "Male"))]
 edgeDS <- edgeDS[, c(1,2,3,4,5,185,6:184)]
 ```
 
-Potentially, transform year
+Potentially, transform year (not evaluated though)
 
 ```{r, echo=TRUE, eval=FALSE}
 numToChar <- function(x) { ux = unique(x); formatC(ux)[match(x, ux)] }
@@ -145,13 +161,13 @@ edgeDS$Year <- year(as.Date(numToChar(edgeDS$Year), "%Y"))
 
 ### Shows some examples of data
 
-Structure of dataset
+What is the structure of dataset?
 
 ```{r}
 str(edgeDS, list.len=10)
 ```
 
-Do not evaluate below ones
+Do not evaluate below ones because the output would be huge. 
 
 ```{r,eval=FALSE, echo=T}
 head(edgeDS)
@@ -160,16 +176,18 @@ summary(edgeDS) # print summaries of each variable
 
 ## My own questions
 
-`head()` will report only first 6 values 
+### How many times can a specific number of characters be observed?
+
+But first take a broader look on the dataset. `tail()` will report (i.e. print) only last 6 values. 
 
 ```{r}
 tail(sort(table(edgeDS$Id))) # Who has contributed the most in all discussions
-length(unique(edgeDS$Id)) # How many unique participitants are there ?
+length(unique(edgeDS$Id)) # How many unique participants are there ?
 ```
 
-And overall number of unique values per each variable ? 
+And overall number of unique values per each variable (printed only first and last 6)? 
 
-```{r}
+```{r echo=FALSE}
 kable(head(rapply(edgeDS,function(x)length(unique(x)))), "html") %>% 
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 
@@ -177,29 +195,63 @@ kable(tail(rapply(edgeDS,function(x)length(unique(x)))), "html") %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-And, hey, look, that's interesting. While there are just 522 unique titles, there are 523 unique links. Using `count` function, we show number of observations (i.e. links) per title. 
+And hey, look, that's **interesting**. While there are just 522 unique titles, there are 523 unique links. Using `count` function, we show number of observations (i.e. links) per title. 
 
-And indeed, there are two same titles for different EDGE's conversations. [Preface from 2011](https://www.edge.org/conversation/preface) and [preface from 2008](https://www.edge.org/conversation/preface-of-whats-next).
+And indeed, there are two same titles for different EDGE's conversations. [Preface from 2011](https://www.edge.org/conversation/preface) and [Preface from 2008](https://www.edge.org/conversation/preface-of-whats-next).
 
 ```{r}
 count(edgeDS, Title, Link)[304:305, ]
 ```
 
-Moreover, out of almost 8000 observations, we can see that roughly the half of comments is of the same lenght
+Moreover, out of almost 8000 observations, we can see that roughly the half of all comments is of the same length.
 
 ```{r}
-count_numberOfChars <- count(edgeDS, Number.Characters)
-kable(head(arrange(count_numberOfChars, desc(n)), 10), "html") %>% 
+count_numberOfChars <- arrange(count(edgeDS, Number.Characters)[, c(2,1)], desc(n))[1:20,]
+kable(head(count_numberOfChars, 10), "html",
+      col.names = c("Number of comments...", "that have lenght of...")) %>% 
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-So there are for example 34 cases of comments that have lenght of 32 characters. 
+A parallel coordinate plot showing how many times can a specific number of characters be observed. Here are only to 20 "connections". I let the user figure out what is nicer and more understandable - I like the first one more. 
 
-### If you are academician, does it mean that the debate size will increase?
+```{r, message=F, warning=F, eval=T, echo=F}
+p1 <- ggparcoord(data = count_numberOfChars, columns = c(1, 2), scale = "globalminmax") + 
+  scale_y_continuous(breaks = seq(0,60, by=2), 
+                     sec.axis = sec_axis(~., name = "Number of characters", breaks = seq(0,60, by=5))) + 
+  labs(y = "Number of occurances", x = "", title = "TOP 20 connections") +
+  scale_fill_ptol() + 
+  theme_minimal() + 
+  theme(axis.title.x=element_blank(), 
+        axis.text.x=element_blank(), 
+        axis.ticks.x=element_blank()) + 
+  geom_segment(mapping = aes(x = 1, y = n, xend = 2, yend= Number.Characters), 
+               inherit.aes = F, 
+               data = count_numberOfChars, 
+               arrow=arrow(length=unit(0.2,"cm")))
 
-Let's find it out :) First, however, prepare the dataset.
+p2 <- ggparcoord(data = count_numberOfChars, columns = c(2, 1), scale = "globalminmax") + 
+  scale_y_continuous(breaks = seq(0,60, by=2), 
+                     sec.axis = sec_axis(~., name = "Number of occurances ", breaks = seq(0,60, by=5))) + 
+  labs(y = "Number of characters", x = "", title = "TOP 20 connections") +
+  scale_fill_ptol() + 
+  theme_minimal() + 
+  theme(axis.title.x=element_blank(), 
+        axis.text.x=element_blank(), 
+        axis.ticks.x=element_blank()) + 
+  geom_segment(mapping = aes(x = 1, y = Number.Characters, xend = 2, yend=n ), 
+               inherit.aes = F, 
+               data = count_numberOfChars, 
+               arrow=arrow(length=unit(0.1,"cm")))
+grid.arrange(p1, p2, ncol=2)
+```
 
-```{r, eval=T}
+[Source 1](https://stackoverflow.com/a/27862149) / [Source 2](https://stackoverflow.com/a/29310738) / [GGPlot2 - geom_segment](http://ggplot2.tidyverse.org/reference/geom_segment.html)
+
+### What was the relationship over the years if you participitated as an academician in the conversation?
+
+Did it mean that debate size was also increasing? Let's find it out :) First, however, prepare the dataset.
+
+```{r}
 edgeDS_academiciansInDebates <- edgeDS %>% 
   filter(Type == 2) %>% # just "conversations" (not annual questions) written by either 1 or 2 authors
   select(Year, ThreadId, DebateSize, Academic) %>% 
@@ -210,48 +262,87 @@ edgeDS_academiciansInDebates <- edgeDS %>%
 colnames(edgeDS_academiciansInDebates)[4] <- "NumberOf_Non_Academicians"
 colnames(edgeDS_academiciansInDebates)[5] <- "NumberOf_Academicians"
 colnames(edgeDS_academiciansInDebates)[6] <- "Unknown"
-
-kable(head(edgeDS_academiciansInDebates, 3)) # table snippet
 ```
+
+```{r echo=FALSE}
+kable(head(edgeDS_academiciansInDebates, 3), "html") %>% 
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F) # table snippet
+```
+
 
 [Source for tally & spread code](https://stackoverflow.com/a/41735721)
 
+How does debate size relate to the number of academicians? We make a simple linear regression to find out. 
+
 ```{r}
-lm_aca_deb <- lm(NumberOf_Academicians ~ DebateSize, data = edgeDS_academiciansInDebates)
+lm_aca_deb <- lm(DebateSize ~ NumberOf_Academicians, data = edgeDS_academiciansInDebates)
 summary(lm_aca_deb)
 ```
 
-So, as number of academicians (`r lm_aca_deb$coefficients[1]`) decreases, the debate size will grow (`r lm_aca_deb$coefficients[2]`) (?).
+So, the mean debate size will grow by `r lm_aca_deb$coefficients[2]` as the number of academicians grows by 1. If a number of academicians is 0, the debate size predicts to be `r lm_aca_deb$coefficients[1]`.
+[Source](https://onlinecourses.science.psu.edu/stat501/node/252)
 
-Now, summarize number of academicians by year (in from all conversations).
+Now, summarize number of academicians by year (from all conversations).
 
 ```{r}
-year_aca_sum <- edgeDS_academiciansInDebates[,c(1,5)] %>% 
+year_aca_sum <- edgeDS_academiciansInDebates[,c(1,3,5)] %>% 
   group_by(Year) %>% 
-  summarise(NumberOf_Academicians_all = sum(NumberOf_Academicians))
+  summarise(DebateSize = sum(DebateSize),
+            NumberOf_Academicians_all = sum(NumberOf_Academicians), 
+            Proportion = NumberOf_Academicians_all/DebateSize)
+```
 
+```{r echo=FALSE}
 kable(head(year_aca_sum, 3), "html") %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
 
 
-ggplot(year_aca_sum, aes(x = Year, y = NumberOf_Academicians_all)) + 
+Plot!
+
+```{r echo=FALSE, fig.height=8, fig.width=15}
+g3 <- ggplot(year_aca_sum, aes(x = Year, y = NumberOf_Academicians_all)) + 
   geom_point() +
   geom_smooth(method = "lm", se = T, show.legend = TRUE, span = 0.3) +
   scale_x_continuous(breaks = pretty(year_aca_sum$Year, n = 19)) +
   scale_y_continuous(breaks = pretty(year_aca_sum$NumberOf_Academicians_all, 20)) + 
   scale_fill_ptol() + theme_minimal() +
   ggtitle("Number of academicians in all conversations per Year", 
-          subtitle = "Has very small growing tendency. Or, well, rather random") + 
+          subtitle = "Has very small growing tendency.") + 
   ylab("Number of Academicians") 
+
+g4 <- ggplot(year_aca_sum, aes(x = Year, y = Proportion)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = T, show.legend = TRUE, span = 0.3) +
+  scale_x_continuous(breaks = pretty(year_aca_sum$Year, n = 19)) +
+  scale_y_continuous(breaks = pretty(year_aca_sum$Proportion, 10)) + 
+  scale_fill_ptol() + theme_minimal() +
+  ggtitle("Proportion of academicians (yearly) in debates") + ylab("Number of Academicians/Debate Size") 
+
+grid.arrange(g3, g4, ncol=2)
 ```
 
-Well, not so much. 
+And percentages ?
 
-### What is yearly proportion of academicians in debates?
+```{r, echo=F, eval=T}
+percantage <- percent(year_aca_sum$NumberOf_Academicians_all / year_aca_sum$DebateSize)
+proportions_in_debates <- cbind(year_aca_sum$Year, percantage)
+tail(proportions_in_debates) # show percentages from recent years
+```
 
-Let's now look on how academicians and non-academicians debate on a yearly basis and who is actually more frequent to discuss their opinions. 
 
-First, however, prepare the data.
+```{r, message=F, warning=F, eval=F, echo=F}
+> Residuals are not symetrical and "that means that the model predicts certain points that fall far away from the actual observed points". [Source](https://feliperego.github.io/blog/2015/10/23/Interpreting-Model-Output-In-R)
+
+> The model doesnt fit well the actual data. R^2 is low, hence correlation is also low - of just `r percent(summary(year_aca_sum_lm)$r.squared)`
+```
+
+
+### What is yearly proportion of contributors in debates?
+
+Let's now look on how different groups contribute on a yearly basis and who is actually more frequent to discuss. 
+
+First, the data.
 
 ```{r}
 year_aca_byGroup <- edgeDS_academiciansInDebates[,c(1,3,4,5,6)] %>% 
@@ -261,8 +352,14 @@ year_aca_byGroup <- edgeDS_academiciansInDebates[,c(1,3,4,5,6)] %>%
             Non_Academicians = sum(NumberOf_Non_Academicians), 
             Unknown = sum(Unknown))
 
-kable(head(year_aca_byGroup))
+```
 
+```{r echo=FALSE}
+kable(head(year_aca_byGroup), "html") %>%
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+```{r}
 year_aca_byGroup.long <- melt(year_aca_byGroup, id.vars = c(1,2))
 
 ggplot(year_aca_byGroup.long, aes(x = Year, y = value, fill = variable)) + 
@@ -274,24 +371,15 @@ ggplot(year_aca_byGroup.long, aes(x = Year, y = value, fill = variable)) +
   theme_minimal() + scale_fill_ptol() 
 ```
 
-And percentages ?
+https://stackoverflow.com/a/37818965
 
-```{r, echo=F}
-percantage <- percent(year_aca_byGroup$Academicians / year_aca_byGroup$DebateSize)
-proportions_in_debates <- cbind(year_aca_byGroup$Year, percantage)
+```{r include=FALSE, message=F, warning=F}
+# Now, remove datasets to free RAM
+rm(count_numberOfChars, year_aca_byGroup.long, year_aca_sum, edgeDS_academiciansInDebates,
+   g3,g4,lm_aca_deb,p1,p2,year_aca_byGroup, proportions_in_debates)
 ```
 
-```{r}
-tail(proportions_in_debates) # show percentages from recent years
-```
-
-### Remove datasets to free RAM
-
-```{r}
-rm(mis, missing_data, year_aca_sum, edgeDS_academiciansInDebates)
-```
-
-## Hypothesis No. 1: Participatation's tendency 
+## Hypothesis No. 1: Participant's tendency 
 
 > Hypothesis 1: "A woman's tendency to participate actively in the conversation correlates positively with the number of (i guess unique) females in the discussion."
 
@@ -302,7 +390,9 @@ edgeDS_conversations <- edgeDS %>%
   filter(Type == 2) %>% 
   select(-Link, -Title, -Order, -Text,-Limited_Information, -starts_with("dummy")) %>% 
   select(-(62:144))
+```
 
+```{r echo=FALSE}
 kable(head(edgeDS_conversations[,1:5]), "html") %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
@@ -312,7 +402,9 @@ edgeDS_conversations_q1 <- edgeDS_conversations %>%
   select(Year, ThreadId, Male_Contributions, Female_Contributions) %>% 
   group_by(Year, ThreadId, Male_Contributions, Female_Contributions) %>% 
   distinct(.keep_all = TRUE)
+```
 
+```{r echo=FALSE}
 kable(head(edgeDS_conversations_q1), "html") %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
@@ -354,7 +446,7 @@ WomenPerThreadID <- edgeDS_conversations %>%
 ```
 
 
-### Female participitation per Year
+### Female participation per Year
 
 ```{r}
 WomenPerThreadID.q2 <- WomenPerThreadID %>% 
@@ -381,7 +473,7 @@ ggplot(WomenPerThreadID.q2, aes(x = Year, y = AvgFemaleParticipationPerYear)) +
 
 **First Task:** Define what is the "status". 
 
-**My Definition:** I define "higher status" as being solely dependant on the person's background, workplace (i.e. where he comes from), his/her job (and if academicians, then also the department, discipline and academic rank), whether (s)he has a PhD and from which institution. 
+**My Definition:** I define "higher status" as being solely dependent on the person's background, workplace (i.e. where he comes from), his/her job (and if academicians, then also the department, discipline and academic rank), whether (s)he has a PhD and from which institution. 
 
 
 ```{r}
@@ -415,7 +507,7 @@ edgeDS_verbosity <- edgeDS %>%
 
 ```{r}
 # guessing: this is most relevant
-ggplot(edgeDS_verbosity, aes(Academic, Number.Characters)) + geom_boxplot() + scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = trans_format("log10", math_format(10^.x))) + xlab("Group") + ylab("Number of characters")
+ggplot(edgeDS_verbosity, aes(Academic, Number.Characters)) + geom_boxplot() + scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = trans_format("log10", math_format(10^.x))) + xlab("Group") + ylab("Number of characters") + theme_minimal() + scale_fill_ptol() 
 
 edgeDS_verbosity_aca_y <- edgeDS_verbosity %>% filter(Academic == "Academicians") 
 mean(edgeDS_verbosity_aca_y$Number.Characters) # avarage number of chars by academicians
@@ -427,26 +519,60 @@ mean(edgeDS_verbosity_aca_n$Number.Characters) # avarage number of chars by non-
 Does number of characters in the comment depend anyhow on the job title? Well, only slightly. 
 
 ```{r}
-ggplot(edgeDS_verbosity, aes(Job_Title_S, Number.Characters)) + geom_boxplot() + coord_flip() + scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = trans_format("log10", math_format(10^.x))) + xlab("Job Title") + ylab("Number of characters")
+ggplot(edgeDS_verbosity, aes(Job_Title_S, Number.Characters)) + geom_boxplot() + coord_flip() + scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = trans_format("log10", math_format(10^.x))) + xlab("Job Title") + ylab("Number of characters") + theme_minimal() + scale_fill_ptol() 
 ```
 
 Also, of those academic people, departments/fields they come from and work in has some impact on how much they write. 
 
 ```{r}
-ggplot(edgeDS_verbosity, aes(Department_S, Number.Characters)) + geom_boxplot() + coord_flip() + scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = trans_format("log10", math_format(10^.x))) + xlab("Academic Department") + ylab("Number of characters")
+ggplot(edgeDS_verbosity, aes(Department_S, Number.Characters)) + geom_boxplot() + coord_flip() + scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = trans_format("log10", math_format(10^.x))) + xlab("Academic Department") + ylab("Number of characters") + theme_minimal() + scale_fill_ptol() 
 ```
 
+Discipline also seems to have an impact. The difference between "Professions" and "Other" ("NA") is also quite significant.
+
+```{r, echo=FALSE, eval=FALSE}
+my_text <- "This text is at x=0.7 and y=0.8!"
+my_grob = grid.text(my_text, x=0.7,  y=0.8, gp=gpar(col="firebrick", fontsize=14, fontface="bold"))
+gg + annotation_custom(my_grob)
+```
+
+
+```{r, warning=F}
+ggplot(edgeDS_verbosity, aes(Discipline, Number.Characters)) + 
+  geom_boxplot() + coord_flip()  + 
+  xlab("Academic Discipline") + ylab("Number of characters") + 
+  scale_y_continuous(breaks = seq(0, 100000, by = 1000), limits = c(0, 10000)) + 
+  stat_summary(fun.y="mean", geom="point", size=2.5, color="green") +  
+  labs(title="Box Plot of number of characters by academic discipline", caption="Green Point shows avarage/mean") +
+  theme_minimal() + scale_fill_ptol()  
+
+edgeDS_verbosity_disc_diff <- edgeDS_verbosity %>% 
+  ungroup() %>% 
+  select(Discipline, Number.Characters) %>% 
+  group_by(Discipline) %>% 
+  summarize(minNumber.Characters = min(Number.Characters), 
+            #minDisciplineName = Discipline[which.min(Number.Characters)], 
+            maxNumber.Characters = max(Number.Characters), 
+            #maxDisciplineName = Discipline[which.max(Number.Characters)]
+            ) %>% 
+  mutate(difference_max_min = maxNumber.Characters-minNumber.Characters)
+
+kable(edgeDS_verbosity_disc_diff, "html") %>% 
+  kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
+```
+
+[Source](https://stackoverflow.com/a/30196561)
+
 ```{r}
-ggplot(edgeDS_verbosity, aes(Discipline, Number.Characters)) + geom_boxplot() + coord_flip() + scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = trans_format("log10", math_format(10^.x))) + xlab("Academic Discipline") + ylab("Number of characters")
+ggplot(edgeDS_verbosity, aes(PhD_Institution_SR_Bin, Number.Characters)) + geom_boxplot() 
 
-ggplot(edgeDS_verbosity, aes(PhD_Institution_SR_Bin, Number.Characters)) + geom_boxplot() + scale_y_log10()
+ggplot(edgeDS_verbosity, aes(AcademicHierarchyStrict, Number.Characters)) + geom_boxplot()
 
-ggplot(edgeDS_verbosity, aes(AcademicHierarchyStrict, Number.Characters)) + geom_boxplot() + scale_y_log10()
+ggplot(edgeDS_verbosity, aes(HavePhD, Number.Characters)) + geom_boxplot()  # More Verbose = yes
 
-ggplot(edgeDS_verbosity, aes(HavePhD, Number.Characters)) + geom_boxplot() + scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x), labels = trans_format("log10", math_format(10^.x))) # More Verbose = yes
-edgeDS_verbosity_hphd_y <- edgeDS_verbosity %>% filter(HavePhD == 1) 
+edgeDS_verbosity_hphd_y <- edgeDS_verbosity %>% filter(HavePhD == 1) # how much those with PhD write ?
 mean(edgeDS_verbosity_hphd_y$Number.Characters)
-edgeDS_verbosity_hphd_n <- edgeDS_verbosity %>% filter(HavePhD == 0) 
+edgeDS_verbosity_hphd_n <- edgeDS_verbosity %>% filter(HavePhD == 0) # how much those without PhD write ?
 mean(edgeDS_verbosity_hphd_n$Number.Characters)
 ```
 
@@ -454,20 +580,22 @@ Potentially, also interesting
 
 ```{r}
 ggplot(edgeDS_verbosity, aes(DebateSize, Number.Characters)) + geom_boxplot(aes(group = cut_width(DebateSize, 50)))
-ggplot(edgeDS_verbosity, aes(Role, Number.Characters)) + geom_boxplot() + scale_y_log10()
-gg_gender <- ggplot(edgeDS_verbosity, aes(Gender, Number.Characters)) + geom_boxplot() + scale_y_log10()
-ggplotly(gg_gender, width = 672, height = 480)
+
+ggplot(edgeDS_verbosity, aes(Role, Number.Characters)) + geom_boxplot() 
+
+gg_gender <- ggplot(edgeDS_verbosity, aes(Gender, Number.Characters)) + geom_boxplot()
+# ggplotly(gg_gender, width = 672, height = 480)
 ```
 
 Create bins for h-index and i10-index (citations)
 
 ```{r}
 edgeDS_verbosity$hindex_bin <- cut(edgeDS_verbosity$H_Index, breaks=c(0,15, 30, 45, 60, 75, 90, 105, 120, 135, 150), labels=c("0-15","15-30","30-45", "45-60", "60-75", "75-90", "90-105", "105-120", "120-135", "135-150"))
-ggplot(edgeDS_verbosity, aes(hindex_bin, Number.Characters)) + geom_boxplot() + scale_y_log10() 
+ggplot(edgeDS_verbosity, aes(hindex_bin, Number.Characters)) + geom_boxplot() 
 
 #TODO
 edgeDS_verbosity$i10_bin <- cut(edgeDS_verbosity$i10_Index, breaks=seq(0,600, by = 40))
-ggplot(edgeDS_verbosity, aes(i10_bin, Number.Characters)) + geom_boxplot() + scale_y_log10() 
+ggplot(edgeDS_verbosity, aes(i10_bin, Number.Characters)) + geom_boxplot() 
 ```
 
 
@@ -481,7 +609,6 @@ ggplot(edgeDS_verbosity, aes(i10_bin, Number.Characters)) + geom_boxplot() + sca
 
  categorize people into regions (e.g. according to schools/workplace) and show again number of chars ?
 -> do americans write mroe than europeans ?
-
 
 
 
