@@ -4,13 +4,13 @@ author: "DMPE @ GitHub"
 date: "August 5, 2017"
 output: 
   html_document: 
+    css: report_styles.css
     df_print: default
     highlight: textmate
     number_sections: yes
     theme: readable
     toc: yes
     toc_depth: 6
-    css: report_styles.css
 editor_options: 
   chunk_output_type: console
 ---
