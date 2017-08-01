@@ -3,19 +3,21 @@ title: "Analysis of Edge.org Data"
 author: "DMPE @ GitHub"
 date: "August 5, 2017"
 output: 
-  html_document: 
-    css: report_styles.css
-    df_print: default
-    highlight: textmate
-    number_sections: yes
-    theme: readable
-    toc: yes
-    toc_depth: 6
-editor_options: 
+ html_notebook:
+   css: report_styles.css
+   number_sections: yes
+   theme: readable
+   toc: yes
+   toc_depth: 6
+   toc_float:
+      collapsed: false
+      smooth_scroll: true
+editor_options:
   chunk_output_type: console
 ---
 
 ```{r setup, include=F}
+library(knitr)
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(cache = TRUE)
 ```
@@ -38,9 +40,9 @@ You can control the default appearance with options:
 
 - `options(tibble.print_max = n, tibble.print_min = m)`: if there are more than n rows, print only the first m rows. Use `options(tibble.print_max = Inf)` to always show all rows.
 
-- `options(tibble.width = Inf)` will always print all columns, regardless of the width of the screen.
+- `options(tibble.width = Inf)` will print all columns, regardless of the width of the screen.
 
-From [vignette](https://cran.r-project.org/web/packages/tibble/vignettes/tibble.html)
+From [vignette](https://cran.r-project.org/web/packages/tibble/vignettes/tibble.html):
 
 ```{r}
 #options(tibble.print_max = Inf)
@@ -48,8 +50,6 @@ From [vignette](https://cran.r-project.org/web/packages/tibble/vignettes/tibble.
 set.seed(1234)
 ```
 
-- Another promise to myself -> all code will be visible when finally published 
- 
 ## Loading huge number of libraries
 
 ```{r, message=FALSE, warning=FALSE}
@@ -65,7 +65,6 @@ library(scales)
 library(VIM)
 
 # markdown Rmd + table styling
-library(knitr)
 library(kableExtra)
 
 # for plotting - arranging/positioning
@@ -92,7 +91,7 @@ edgeDS <- read_csv("edge1.1EditedFixed.csv", na = c("NA", "", " ", "#N/A"), trim
 ```{r, eval=T, echo=T}
 # print(problems(edgeDS))
 
-# We can either delete or fix row no. 1817 because it is broken mess. I fixed it in csv. 
+# I can either delete or fix row no. 1817 because it is broken mess. I fixed it in csv. 
 # edgeDS <- edgeDS[-c(1817),]
 
 # Replace Not Available & Pending with NA
@@ -103,18 +102,22 @@ edgeDS$PhD_Year[edgeDS$PhD_Year == "Pending"] <- NA
 
 ### Missing values
 
+Number of rows that have some missing values
+
 ```{r}
 missing_data <- edgeDS[!complete.cases(edgeDS),]
-nrow(missing_data) # number of rows that have some missing values
+nrow(missing_data) 
+```
 
+```{r}
 # delete those columns which contain...
 mis <- edgeDS[, -grep("dummy|Unique|Contributions|Numerals", colnames(edgeDS))]
 
-# list variables with most missing values
 arrange(aggr(mis, col=mdc(1:2), numbers=TRUE, sortVars=TRUE, labels=names(mis), 
         cex.axis = .4, gap=3, prop = F, plot = F)$missings, desc(Count))[1:10, ] # 41 have some missing values
 ```
 
+List variables with most missing values
 
 ```{r, eval=FALSE, echo=FALSE}
 aggr(mis[, 1:90], col=mdc(1:2), numbers=TRUE, sortVars=TRUE, labels=names(mis), cex.axis=.4, gap=3, prop = F, plot = T)
@@ -169,7 +172,7 @@ What is the structure of dataset?
 str(edgeDS[,5:15])
 ```
 
-Do not evaluate below ones because the output would be huge. 
+Do not evaluate code below because the output would be huge. 
 
 ```{r,eval=FALSE, echo=T}
 head(edgeDS)
@@ -180,11 +183,18 @@ summary(edgeDS) # print summaries of each variable
 
 ### How many times can a specific number of characters be observed?
 
-But first take a broader look on the dataset. `tail()` will report (i.e. print) only last 6 values. 
+**But first** take a broader look on the dataset. `tail()` will report (i.e. print) only last 6 values. 
+
+Who has contributed the most in all discussions
 
 ```{r}
-tail(sort(table(edgeDS$Id))) # Who has contributed the most in all discussions
-length(unique(edgeDS$Id)) # How many unique participants are there ?
+tail(sort(table(edgeDS$Id))) 
+```
+
+How many unique participants are there ?
+
+```{r}
+length(unique(edgeDS$Id)) 
 ```
 
 And overall number of unique values per each variable (printed only first and last 6)? 
@@ -197,7 +207,7 @@ kable(tail(rapply(edgeDS,function(x)length(unique(x)))), "html") %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-And hey, look, that's **interesting**. While there are just 522 unique titles, there are 523 unique links. Using `count` function, we show number of observations (i.e. links) per title. 
+And hey, look, that's **interesting**. While there are just 522 unique titles, there are 523 unique links. Using `count` function, I show number of observations (i.e. links) per title. 
 
 And indeed, there are two same titles for different EDGE's conversations. [Preface from 2011](https://www.edge.org/conversation/preface) and [Preface from 2008](https://www.edge.org/conversation/preface-of-whats-next).
 
@@ -205,7 +215,7 @@ And indeed, there are two same titles for different EDGE's conversations. [Prefa
 count(edgeDS, Title, Link)[304:305, ]
 ```
 
-Moreover, out of almost 8000 observations, we can see that roughly the half of all comments is of the same length.
+Moreover, out of almost 8000 observations, I can see that roughly the half of all comments are of the same length.
 
 ```{r}
 count_numberOfChars <- arrange(count(edgeDS, Number.Characters)[, c(2,1)], desc(n))[1:20,]
@@ -274,7 +284,7 @@ kable(head(edgeDS_academiciansInDebates, 3), "html") %>%
 
 [Source for tally & spread code](https://stackoverflow.com/a/41735721)
 
-How does debate size relate to the number of academicians? We make a simple linear regression to find out. 
+How does debate size relate to the number of academicians? I make a simple linear regression to find out. 
 
 ```{r}
 lm_aca_deb <- lm(DebateSize ~ NumberOf_Academicians, data = edgeDS_academiciansInDebates)
