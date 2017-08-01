@@ -5,24 +5,26 @@ date: "August 5, 2017"
 output: 
  html_notebook:
    css: report_styles.css
+   highlight: haddock
    number_sections: yes
    theme: readable
    toc: yes
-   toc_depth: 6
    toc_float:
-      collapsed: false
-      smooth_scroll: true
+     collapsed: no
+     smooth_scroll: yes
+     toc_depth: 3
 editor_options:
   chunk_output_type: console
 ---
 
 ```{r setup, include=F}
 library(knitr)
-knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 ```
 
-# Tasks/Objectives - Crowdsourcing Data Analysis 2
+# Objectives - Crowdsourcing Data Analysis 2
+
+(you have to execute this Rmd file in its directory/folder - not in the root!)
 
 Description set out in <https://docs.google.com/document/d/1fXQBLdWydISskOKhoq8gl5unuwsv7VA3pkKY4IWFS6o/edit>.
 
@@ -45,8 +47,7 @@ You can control the default appearance with options:
 From [vignette](https://cran.r-project.org/web/packages/tibble/vignettes/tibble.html):
 
 ```{r}
-#options(tibble.print_max = Inf)
-#options(tibble.width = Inf)
+#options(tibble.print_max = Inf, tibble.width = Inf)
 set.seed(1234)
 ```
 
@@ -83,9 +84,9 @@ library(plotly)
 edgeDS <- read_csv("edge1.1EditedFixed.csv", na = c("NA", "", " ", "#N/A"), trim_ws = T)
 ```
 
-## First some pre-processing
+# First some pre-processing
 
-### Deal with data problems
+## Deal with data problems
 
 
 ```{r, eval=T, echo=T}
@@ -100,7 +101,7 @@ edgeDS$PhD_Year[edgeDS$PhD_Year == "Not Available"] <- NA
 edgeDS$PhD_Year[edgeDS$PhD_Year == "Pending"] <- NA
 ```
 
-### Missing values
+## Missing values
 
 Number of rows that have some missing values
 
@@ -129,7 +130,7 @@ head(md.pattern(mis))
 rm(mis, missing_data)
 ```
 
-### Apply factors to various columns where it makes sense
+## Apply factors to various columns where it makes sense
 
 And rename variable `Academic` from 0/1 to more descriptive
 
@@ -164,7 +165,7 @@ numToChar <- function(x) { ux = unique(x); formatC(ux)[match(x, ux)] }
 edgeDS$Year <- year(as.Date(numToChar(edgeDS$Year), "%Y"))
 ```
 
-### Shows some examples of data
+## Shows some examples of data
 
 What is the structure of dataset?
 
@@ -179,9 +180,9 @@ head(edgeDS)
 summary(edgeDS) # print summaries of each variable
 ```
 
-## My own questions
+# My own questions
 
-### How many times can a specific number of characters be observed?
+## How many times can a specific number of characters be observed?
 
 **But first** take a broader look on the dataset. `tail()` will report (i.e. print) only last 6 values. 
 
@@ -220,17 +221,20 @@ Moreover, out of almost 8000 observations, I can see that roughly the half of al
 ```{r}
 count_numberOfChars <- arrange(count(edgeDS, Number.Characters)[, c(2,1)], desc(n))[1:20,]
 kable(head(count_numberOfChars, 10), "html",
-      col.names = c("Number of comments...", "that have lenght of...")) %>% 
+      col.names = c("Number of comments...", "that have char lenght of...")) %>% 
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-A parallel coordinate plot showing how many times can a specific number of characters be observed. Here are only to 20 "connections". I let the user figure out what is nicer and more understandable - I like the first one more. 
+The most common lenght is `r as.numeric(count_numberOfChars[1,2])` which occurs in `r as.numeric(count_numberOfChars[1,1])` comments.
+
+
+A <strong>*parallel coordinate plot*</strong> shows how many times can a specific number of characters be observed. Here are only 20 vertices - "connections". I let the user figure out what is nicer and more understandable - I like the first one more.
 
 ```{r eval=T, echo=T, fig.height=8, fig.width=15, message=F, warning=F}
 p1 <- ggparcoord(data = count_numberOfChars, columns = c(1, 2), scale = "globalminmax") + 
   scale_y_continuous(breaks = seq(0,60, by=2), 
                      sec.axis = sec_axis(~., name = "Number of characters", breaks = seq(0,60, by=5))) + 
-  labs(y = "Number of occurances", x = "", title = "TOP 20 connections") +
+  labs(y = "Number of occurances", x = "", title = "TOP 20 connections - from lenght of comments to # comments") +
   scale_fill_ptol() + 
   theme_minimal() + 
   theme(axis.title.x=element_blank(), 
@@ -244,7 +248,7 @@ p1 <- ggparcoord(data = count_numberOfChars, columns = c(1, 2), scale = "globalm
 p2 <- ggparcoord(data = count_numberOfChars, columns = c(2, 1), scale = "globalminmax") + 
   scale_y_continuous(breaks = seq(0,60, by=2), 
                      sec.axis = sec_axis(~., name = "Number of occurances ", breaks = seq(0,60, by=5))) + 
-  labs(y = "Number of characters", x = "", title = "TOP 20 connections") +
+  labs(y = "Number of characters", x = "", title = "TOP 20 connections - from # comments to lenght of comments") +
   scale_fill_ptol() + 
   theme_minimal() + 
   theme(axis.title.x=element_blank(), 
@@ -259,10 +263,11 @@ grid.arrange(p1, p2, ncol=2)
 
 [Source 1](https://stackoverflow.com/a/27862149) / [Source 2](https://stackoverflow.com/a/29310738) / [GGPlot2 - geom_segment](http://ggplot2.tidyverse.org/reference/geom_segment.html)
 
-### Relationship between debate size and academicians.
+## Relationship between debate size and academicians.
 
-Namely, what was the relationship between size of debaters and academicians over the years?
-Did it mean that if you participitated as an academician in the conversations debate size was also increasing? Let's find it out :) First, however, prepare the dataset.
+Namely, what was the relationship between size of all debaters and a group of academicians over the years?
+Did it mean that if you participitated as an academician in the conversations, the debate size was also increasing? 
+Let's find it out :) First, however, prepare the dataset.
 
 ```{r}
 edgeDS_academiciansInDebates <- edgeDS %>% 
@@ -291,9 +296,10 @@ lm_aca_deb <- lm(DebateSize ~ NumberOf_Academicians, data = edgeDS_academiciansI
 summary(lm_aca_deb)
 ```
 
-So, the mean debate size will grow by `r lm_aca_deb$coefficients[2]` as the number of academicians increases by 1. If there are zero academicians, the debate size predicts to be `r lm_aca_deb$coefficients[1]`.
+So, the mean debate size will grow by `r lm_aca_deb$coefficients[2]` as the number of academicians increases by 1. 
+If there are zero academicians, the debate size predicts to be `r lm_aca_deb$coefficients[1]`. 
+[(Here is nice article on how to interpret LM)](https://onlinecourses.science.psu.edu/stat501/node/252)
 
-[Source for LM](https://onlinecourses.science.psu.edu/stat501/node/252)
 
 Now, summarize number of academicians by year (from all conversations).
 
@@ -347,7 +353,7 @@ tail(proportions_in_debates) # show percentages from recent years
 ```
 
 
-### What is proportion of contributors in debates?
+## What is proportion of contributors in debates?
 
 Let's now look on how different groups contribute in debates.
 
@@ -367,7 +373,10 @@ kable(head(year_aca_byGroup), "html") %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-Clearly, academicians prevail in majority of debates as the number of outsiders declined significantly over last few years. Also, the number of participitants in debates does not grow much. 
+Clearly, **academicians prevail in majority** of debates as the number of outsiders (non-aca + unknown) declined 
+significantly over last few years. 
+Also, the number of participitants in debates does not grow much - the summary statistics are: 
+`r summary(year_aca_byGroup[2])`. The mean size of conversations is just shy of 300.
 
 ```{r fig.height=8, fig.width=15, message=F, warning=F}
 year_aca_byGroup.long <- melt(year_aca_byGroup, id.vars = c(1,2))
@@ -402,14 +411,16 @@ grid.arrange(k1, k2, ncol=2)
 ```{r include=FALSE, message=F, warning=F}
 # Now, remove datasets to free RAM
 rm(count_numberOfChars, year_aca_byGroup.long, year_aca_sum, edgeDS_academiciansInDebates,
-   g3,g4,lm_aca_deb,p1,p2,year_aca_byGroup, proportions_in_debates)
+   g3,g4,lm_aca_deb,p1,p2,year_aca_byGroup, k1, k2)
 ```
 
-## Hypothesis No. 1: Women's tendency 
+
+
+# Hypothesis No. 1: Women's tendency 
 
 > Hypothesis 1: "A woman's tendency to participate actively in the conversation correlates positively with the number of (i guess unique) females in the discussion."
 
-First, create data that can be used later. 
+First, create data that can be used later (print only first 5 columns). 
 
 ```{r}
 edgeDS_conversations <- edgeDS %>% 
@@ -437,13 +448,16 @@ kable(head(edgeDS_conversations_q1), "html") %>%
 
 Opportunities to group by: Live, Academia, Two authors, HavePhD, AuthorAndCommenter
 
-### Does the ratio of men:women increase over year ?
+## Does the ratio of men:women increase over year ?
+
+Number of women per threadID/a single conversation
 
 ```{r}
 ggplot(edgeDS_conversations_q1, aes(x= ThreadId)) + 
   geom_line(aes(y = Male_Contributions, colour = "Male Contributions")) + 
   geom_line(aes(y = Female_Contributions, colour = "Female Contributions")) + 
-  ylab("Contributions")
+  ylab("Contributions by Gender") + labs(color = "Group")
+# https://stackoverflow.com/a/38938781
 ```
 
 ```{r}
@@ -460,17 +474,19 @@ ThreadId, Gender, Number of F + M in discussion ~ facet
  # geom_point() + facet_grid(. ~ variable)  + scale_y_log10()
 ```
 
-### Number of women per threadID/conversation
+Prepare data for later use.
 
 ```{r}
 WomenPerThreadID <- edgeDS_conversations %>% 
-  select(Year, ThreadId, Male_Contributions, Female_Contributions, FemaleParticipation, 
-                                                    DebateSize, UniqueContributors, UniqueMaleContributors, UniqueFemaleContributors, UniqueFemaleParticipation) %>% 
+  select(Year, ThreadId, Male_Contributions, 
+         Female_Contributions, FemaleParticipation, 
+         DebateSize, UniqueContributors, UniqueMaleContributors, 
+         UniqueFemaleContributors, UniqueFemaleParticipation) %>% 
   distinct(.keep_all = TRUE)
 ```
 
 
-### Female participation per Year
+## Female participation per Year
 
 ```{r}
 WomenPerThreadID.q2 <- WomenPerThreadID %>% 
@@ -486,12 +502,7 @@ ggplot(WomenPerThreadID.q2, aes(x = Year, y = AvgFemaleParticipationPerYear)) +
   theme_minimal() + scale_fill_ptol() 
 ```
 
-
-
-
-
-
-## Hypothesis No. 2: Verbosity
+# Hypothesis No. 2: Verbosity 
 
 > Hypothesis 2: "Higher status participants are more verbose than are lower status participants."
 
@@ -506,7 +517,7 @@ edgeDS_verbosity <- edgeDS %>%
   group_by(Year, Academic, Limited_Information, H_Index, i10_Index, Role, Gender, HavePhD, DebateSize, Job_Title_S, Department_S, Discipline, PhD_Institution_SR_Bin,AcademicHierarchyStrict, Number.Characters)
 ```
 
-### Compare people based on their Job Title, Academic Department & Discipline, etc. in terms of how much did they write to conversation and annual questions.
+## Compare people based on their Job Title, Academic Department & Discipline, etc. in terms of how much did they write to conversation and annual questions.
 
 **AcademicHierarchyStrict** is described as:
 
@@ -640,6 +651,7 @@ ggplot(edgeDS_verbosity, aes(i10_bin, Number.Characters)) + geom_boxplot()
 
 
 
-
+http://rpubs.com/marschmi/RMarkdown
+https://raw.githubusercontent.com/marschmi/RMarkdown_May11_2016/master/RMarkdown_Lesson.Rmd
 
 
