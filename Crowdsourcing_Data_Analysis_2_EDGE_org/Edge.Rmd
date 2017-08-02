@@ -58,6 +58,7 @@ set.seed(1234)
 library(tidyverse)
 library(reshape2)
 library(scales)
+library(tidyr)
 
 # imputation & missingness
 #library(mice)
@@ -110,6 +111,8 @@ missing_data <- edgeDS[!complete.cases(edgeDS),]
 nrow(missing_data) 
 ```
 
+List variables with most missing values
+
 ```{r}
 # delete those columns which contain...
 mis <- edgeDS[, -grep("dummy|Unique|Contributions|Numerals", colnames(edgeDS))]
@@ -117,8 +120,6 @@ mis <- edgeDS[, -grep("dummy|Unique|Contributions|Numerals", colnames(edgeDS))]
 arrange(aggr(mis, col=mdc(1:2), numbers=TRUE, sortVars=TRUE, labels=names(mis), 
         cex.axis = .4, gap=3, prop = F, plot = F)$missings, desc(Count))[1:10, ] # 41 have some missing values
 ```
-
-List variables with most missing values
 
 ```{r, eval=FALSE, echo=FALSE}
 aggr(mis[, 1:90], col=mdc(1:2), numbers=TRUE, sortVars=TRUE, labels=names(mis), cex.axis=.4, gap=3, prop = F, plot = T)
@@ -184,9 +185,9 @@ summary(edgeDS) # print summaries of each variable
 
 ## How many times can a specific number of characters be observed?
 
-**But first** take a broader look on the dataset. `tail()` will report (i.e. print) only last 6 values. 
+**But first** take a broader look on the dataset. `tail()`/`head()` will report (i.e. print) only last/first 6 values. 
 
-Who has contributed the most in all discussions
+Who has contributed the most in all discussions ?
 
 ```{r}
 tail(sort(table(edgeDS$Id))) 
@@ -214,13 +215,17 @@ And indeed, there are two same titles for different EDGE's conversations. [Prefa
 
 ```{r}
 count(edgeDS, Title, Link)[304:305, ]
+count_numberOfChars_small <- arrange(count(edgeDS, Number.Characters)[, c(2,1)], desc(n))[1:20,]
+count_numberOfChars <- arrange(count(edgeDS, Number.Characters)[, c(2,1)], desc(n))
 ```
 
-Moreover, out of almost 8000 observations, I can see that roughly the half of all comments are of the same length.
+Moreover, out of almost `r nrow(edgeDS)` observations, I can see that `r percent(length(count_numberOfChars$n[count_numberOfChars$n == 1])/nrow(edgeDS))` of comments has a lenght of 1.
+
+Another `r percent(length(count_numberOfChars$n[count_numberOfChars$n == 2])/nrow(edgeDS))` of comments has a character 
+lenght of 2.
 
 ```{r}
-count_numberOfChars <- arrange(count(edgeDS, Number.Characters)[, c(2,1)], desc(n))[1:20,]
-kable(head(count_numberOfChars, 10), "html",
+kable(head(count_numberOfChars_small, 10), "html",
       col.names = c("Number of comments...", "that have char lenght of...")) %>% 
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
@@ -231,10 +236,10 @@ The most common lenght is `r as.numeric(count_numberOfChars[1,2])` which occurs 
 A <strong>*parallel coordinate plot*</strong> shows how many times can a specific number of characters be observed. Here are only 20 vertices - "connections". I let the user figure out what is nicer and more understandable - I like the first one more.
 
 ```{r eval=T, echo=T, fig.height=8, fig.width=15, message=F, warning=F}
-p1 <- ggparcoord(data = count_numberOfChars, columns = c(1, 2), scale = "globalminmax") + 
+p1 <- ggparcoord(data = count_numberOfChars_small, columns = c(1, 2), scale = "globalminmax") + 
   scale_y_continuous(breaks = seq(0,60, by=2), 
                      sec.axis = sec_axis(~., name = "Number of characters", breaks = seq(0,60, by=5))) + 
-  labs(y = "Number of occurances", x = "", title = "TOP 20 connections - from lenght of comments to # comments") +
+  labs(y = "Number of occurances", x = "", title = "TOP 20 connections - from # of comments to lenght of comments") +
   scale_fill_ptol() + 
   theme_minimal() + 
   theme(axis.title.x=element_blank(), 
@@ -242,13 +247,13 @@ p1 <- ggparcoord(data = count_numberOfChars, columns = c(1, 2), scale = "globalm
         axis.ticks.x=element_blank()) + 
   geom_segment(mapping = aes(x = 1, y = n, xend = 2, yend= Number.Characters), 
                inherit.aes = F, 
-               data = count_numberOfChars, 
+               data = count_numberOfChars_small, 
                arrow=arrow(length=unit(0.2,"cm")))
 
-p2 <- ggparcoord(data = count_numberOfChars, columns = c(2, 1), scale = "globalminmax") + 
+p2 <- ggparcoord(data = count_numberOfChars_small, columns = c(2, 1), scale = "globalminmax") + 
   scale_y_continuous(breaks = seq(0,60, by=2), 
                      sec.axis = sec_axis(~., name = "Number of occurances ", breaks = seq(0,60, by=5))) + 
-  labs(y = "Number of characters", x = "", title = "TOP 20 connections - from # comments to lenght of comments") +
+  labs(y = "Number of characters", x = "", title = "TOP 20 connections - from lenght of comments to # of comments") +
   scale_fill_ptol() + 
   theme_minimal() + 
   theme(axis.title.x=element_blank(), 
@@ -256,7 +261,7 @@ p2 <- ggparcoord(data = count_numberOfChars, columns = c(2, 1), scale = "globalm
         axis.ticks.x=element_blank()) + 
   geom_segment(mapping = aes(x = 1, y = Number.Characters, xend = 2, yend=n ), 
                inherit.aes = F, 
-               data = count_numberOfChars, 
+               data = count_numberOfChars_small, 
                arrow=arrow(length=unit(0.1,"cm")))
 grid.arrange(p1, p2, ncol=2)
 ```
@@ -273,7 +278,7 @@ Let's find it out :) First, however, prepare the dataset.
 edgeDS_academiciansInDebates <- edgeDS %>% 
   filter(Type == 2) %>% # just "conversations" (not annual questions) written by either 1 or 2 authors
   select(Year, ThreadId, DebateSize, Academic) %>% 
-  group_by(Year, ThreadId, DebateSize, Academic) %>% 
+  group_by_all() %>% 
   tally %>% 
   spread(Academic, n, fill = 0)
   
@@ -352,12 +357,11 @@ tail(proportions_in_debates) # show percentages from recent years
 > The model doesnt fit well the actual data. R^2 is low, hence correlation is also low - of just `r percent(summary(year_aca_sum_lm)$r.squared)`
 ```
 
-
 ## What is proportion of contributors in debates?
 
 Let's now look on how different groups contribute in debates.
 
-First, the data.
+First, I start with (non-)academicians and hence need right data.
 
 ```{r}
 year_aca_byGroup <- edgeDS_academiciansInDebates[,c(1,3,4,5,6)] %>% 
@@ -395,25 +399,55 @@ year_aca_byGroup.long$variable <- factor(year_aca_byGroup.long$variable, levels 
 k2 <- ggplot(year_aca_byGroup.long, aes(x = Year, y = value, fill = variable)) + 
     geom_bar(stat="identity", position="fill") + 
     scale_y_continuous(breaks = seq(0,1,by=0.1), labels = percent) +
-    labs(y = "Percent", fill = "Type", title = "Debaters' proportionality per year") + 
+    labs(y = "Percent", fill = "Type", title = "Debaters' proportionality per year by background") + 
     theme_minimal() + # scale_fill_ptol() +
     scale_fill_manual(
       values=c("Academicians"="#4477AA", "Non_Academicians"="#DDCC77", "Unknown"="#CC6677")) +
     scale_colour_manual(
       values=c("Academicians"="#4477AA", "Non_Academicians"="#DDCC77", "Unknown"="#CC6677"), 
-      labels=c("Academicians", "Non_Academicians", "Unknown"))
-
+      labels=c("Academicians", "Non_Academicians", "Unknown")) +
+    labs(fill = "Group")
 grid.arrange(k1, k2, ncol=2)
 ```
 
 [Source #1 unused](https://stackoverflow.com/a/37818965) / [Source #2 position fill](https://stackoverflow.com/a/11026432) / [Source #3 for Percent bar plot](http://www.r-graph-gallery.com/48-grouped-barplot-with-ggplot2/) / [Source #4 for position_stack reverse](https://stackoverflow.com/a/34637703) / [Source #5 for deleting first legend](https://stackoverflow.com/a/35622358)
 
-```{r include=FALSE, message=F, warning=F}
-# Now, remove datasets to free RAM
-rm(count_numberOfChars, year_aca_byGroup.long, year_aca_sum, edgeDS_academiciansInDebates,
-   g3,g4,lm_aca_deb,p1,p2,year_aca_byGroup, k1, k2)
+
+The same now with gender. 
+
+```{r, message=F, warning=F}
+edgeDS_genderInDebates <- edgeDS %>% 
+  filter(Type == 2) %>% # just "conversations" (not annual questions) written by either 1 or 2 authors
+  select(Year, ThreadId, DebateSize, Gender) %>% 
+  group_by_all() %>% 
+  tally %>% 
+  spread(Gender, n, fill = 0)
+
+colnames(edgeDS_genderInDebates)[6] <- "Unknown"
+edgeDS_genderInDebates.long <- melt(edgeDS_genderInDebates, id.vars = c(1,2,3))
+edgeDS_genderInDebates.long$variable <- factor(edgeDS_genderInDebates.long$variable, 
+                                               levels = c("Unknown","Female","Male" , ordered = T))
+
+ggplot(edgeDS_genderInDebates.long, aes(x = Year, y = value, fill = variable)) + 
+    geom_bar(stat="identity", position="fill") + 
+    scale_y_continuous(breaks = seq(0,1,by=0.05), labels = percent) +
+    labs(y = "Percent", fill = "Type", title = "Debaters' proportionality per year by Gender") + 
+    theme_minimal() + 
+    scale_fill_manual(
+      values=c("Male"="#4477AA", "Female"="#DDCC77", "Unknown"="#CC6677")) +
+    scale_colour_manual(
+      values=c("Male"="#4477AA", "Female"="#DDCC77", "Unknown"="#CC6677"), 
+      labels=c("Male", "Female", "Unknown")) +
+    labs(fill = "Gender")
 ```
 
+In recent years, after 2010, number of women has increased somewhat. 
+
+```{r include=FALSE, message=F, warning=F}
+# Now, remove datasets to free RAM
+rm(count_numberOfChars, year_aca_byGroup.long, year_aca_sum, edgeDS_academiciansInDebates, edgeDS_genderInDebates,
+   g3,g4,lm_aca_deb,p1,p2,year_aca_byGroup, k1, k2, count_numberOfChars_small, edgeDS_genderInDebates.long)
+```
 
 
 # Hypothesis No. 1: Women's tendency 
@@ -434,11 +468,22 @@ kable(head(edgeDS_conversations[,1:5]), "html") %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
+## Does the ratio of men/women increase over year ?
+
+What is number of contributions by both genders per year.
+
 ```{r}
 edgeDS_conversations_q1 <- edgeDS_conversations %>% 
-  select(Year, ThreadId, Male_Contributions, Female_Contributions) %>% 
-  group_by(Year, ThreadId, Male_Contributions, Female_Contributions) %>% 
-  distinct(.keep_all = TRUE)
+  select(Year, ThreadId, Male_Contributions, Female_Contributions, UniqueMaleContributors, UniqueFemaleContributors) %>% 
+  group_by_all() %>%
+  distinct(.keep_all = TRUE) %>% 
+  group_by(Year) %>% 
+  summarise(Total_Male_Contributions = sum(Male_Contributions),
+            Total_Female_Contributions = sum(Female_Contributions),
+            Total_Contributions = Total_Male_Contributions + Total_Female_Contributions,
+            Total_UniqueMaleContributors = sum(UniqueMaleContributors), 
+            Total_UniqueFemaleContributors = sum(UniqueFemaleContributors), 
+            Total_Unique_Contributions = Total_UniqueMaleContributors + Total_UniqueFemaleContributors)
 ```
 
 ```{r echo=FALSE}
@@ -446,61 +491,134 @@ kable(head(edgeDS_conversations_q1), "html") %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-Opportunities to group by: Live, Academia, Two authors, HavePhD, AuthorAndCommenter
+**Explanation for hike in 2008**: The big spike would be attributed to the financial crises where I would assume that 
+a lot of people were searching for job at home and had a lot of time to invest in EDGE conversations. 
 
-## Does the ratio of men:women increase over year ?
+Both, the unique number of contributors (left plot) and total number of contributions in debates is growing in both genders. 
 
-Number of women per threadID/a single conversation
+```{r, fig.height=8, fig.width=15, message=F, warning=F }
+r1 <- ggplot(edgeDS_conversations_q1, aes(x= Year)) + 
+  geom_point(aes(y = Total_UniqueMaleContributors, colour = "Male Contributions")) + 
+  geom_line(aes(y = Total_UniqueMaleContributors, colour = "Male Contributions")) +
+  stat_smooth(aes(y = Total_UniqueMaleContributors, colour = "Male Contributions"), 
+              method = "lm", col = "#1695A3") + 
+  geom_point(aes(y = Total_UniqueFemaleContributors, colour = "Female Contributions")) + 
+  geom_line(aes(y = Total_UniqueFemaleContributors, colour = "Female Contributions")) +
+  stat_smooth(aes(y = Total_UniqueFemaleContributors, colour = "Female Contributions"), 
+              method = "lm", col = "#450003") + 
+  ylab("# of Unique people contributing by Gender") + labs(color = "Gender") + 
+  ggtitle("Unique Contributors") +
+  theme_minimal() + scale_fill_ptol() + theme(legend.position="none") +
+  scale_x_continuous(breaks = pretty(edgeDS_conversations_q1$Year, n = 19)) + 
+  scale_y_continuous(breaks = seq(0, 200, by = 25), limits = c(0, 200))
 
-```{r}
-ggplot(edgeDS_conversations_q1, aes(x= ThreadId)) + 
-  geom_line(aes(y = Male_Contributions, colour = "Male Contributions")) + 
-  geom_line(aes(y = Female_Contributions, colour = "Female Contributions")) + 
-  ylab("Contributions by Gender") + labs(color = "Group")
-# https://stackoverflow.com/a/38938781
+r2 <- ggplot(edgeDS_conversations_q1, aes(x= Year)) + 
+  geom_point(aes(y = Total_Male_Contributions, colour = "Male Contr.")) + 
+  geom_line(aes(y = Total_Male_Contributions, colour = "Male Contr.")) +
+  stat_smooth(aes(y = Total_Male_Contributions, colour = "Male Contr."), 
+              method = "lm", col = "#1695A3") + 
+  geom_point(aes(y = Total_Female_Contributions, colour = "Female Contr.")) + 
+  geom_line(aes(y = Total_Female_Contributions, colour = "Female Contr.")) +
+  stat_smooth(aes(y = Total_Female_Contributions, colour = "Female Contr."), 
+              method = "lm", col = "#450003") + 
+  ylab("Total Contributions by Gender") + labs(color = "Gender") + 
+  ggtitle("Total Contributions by Men are volatile", 
+          subtitle = "While those by Women stay pretty much the same") +
+  theme_minimal() + scale_fill_ptol() +
+  scale_x_continuous(breaks = pretty(edgeDS_conversations_q1$Year, n = 19)) + 
+  scale_y_continuous(breaks = seq(0, 1300, by = 150), limits = c(0, 1300))
+
+grid.arrange(r1, r2, ncol= 2)
 ```
 
+[Source #1](https://stackoverflow.com/a/38938781), [Source #2](https://stackoverflow.com/a/10358388)
+
+## Faceting on various variables
+
+We can now look on how has participitation of women increased over the years - considering that there might be 
+differences between those in Academia with PhD. or where the author and commenter are the same person.  
+
+The plot below shows e.g. that there are no women who are academicians and dont have their PhD. Every women is either academician with PhD. (makes sence) or is a non-academician having PhD or not. 
+
 ```{r}
-#ratio <- edgeDS_conversations_q1$Male_Contributions/edgeDS_conversations_q1$Female_Contributions
-#ggplot(edgeDS_conversations_q1, aes(x=ThreadId)) + geom_line(aes(y=ratio))
+women_part_by_year <- edgeDS_conversations %>% 
+  select(Year, Gender, Female_Contributions, Live, Academic, 
+         TwoAuthors, HavePhD, AuthorAndCommenter) %>% 
+  filter(Gender == "Female") %>% 
+  group_by_all() %>% 
+  tally %>% 
+  spread(Gender, n, fill = 0)
+
+women_part_by_year$Live <- ifelse(women_part_by_year$Live == 0, "Written TP", "Transcribed TP")
+women_part_by_year$TwoAuthors <- ifelse(women_part_by_year$TwoAuthors == 1, "2 authors", "1 author")
+women_part_by_year$HavePhD <- ifelse(women_part_by_year$HavePhD == 1, "Have PHD", "Don't have PHD")
+women_part_by_year$AuthorAndCommenter <- ifelse(women_part_by_year$AuthorAndCommenter == 1,
+                                                "Both author and commentator", "Otherwise")
+colnames(women_part_by_year)[8] <- "#_of_Females"
+
+ggplot(women_part_by_year, aes(x=Year, y = Female_Contributions)) + 
+  geom_point() + facet_grid(Academic ~ HavePhD) + 
+  theme_minimal() + scale_fill_ptol() 
+
+ggplot(women_part_by_year, aes(x=Year, y = Female_Contributions)) + 
+  geom_point() + facet_grid(AuthorAndCommenter ~ TwoAuthors) + 
+  theme_minimal() + scale_fill_ptol() 
+
+ggplot(women_part_by_year, aes(x=Year, y = Female_Contributions)) + 
+  geom_point() + facet_grid(Live ~ . ) + 
+  theme_minimal() + scale_fill_ptol() + ggtitle("Female contributions to the Transcribed or Written Text Pieces")
 ```
 
-ThreadId, Gender, Number of F + M in discussion ~ facet
-
-```{r}
-#edgeDS_conversations_q1.long <- melt(edgeDS_conversations_q1, id.vars = 2)
-
-#ggplot(edgeDS_conversations_q1.long, aes(x = ThreadId, y = value)) +
- # geom_point() + facet_grid(. ~ variable)  + scale_y_log10()
-```
+## Female participation per Year
 
 Prepare data for later use.
 
 ```{r}
-WomenPerThreadID <- edgeDS_conversations %>% 
+PeoplePerThreadID <- edgeDS_conversations %>% 
   select(Year, ThreadId, Male_Contributions, 
          Female_Contributions, FemaleParticipation, 
          DebateSize, UniqueContributors, UniqueMaleContributors, 
          UniqueFemaleContributors, UniqueFemaleParticipation) %>% 
-  distinct(.keep_all = TRUE)
-```
-
-
-## Female participation per Year
-
-```{r}
-WomenPerThreadID.q2 <- WomenPerThreadID %>% 
+  distinct(.keep_all = TRUE) %>% 
   select(Year, FemaleParticipation) %>% 
   group_by(Year) %>% 
-  mutate(AvgFemaleParticipationPerYear = mean(FemaleParticipation))
+  mutate(AvgFemaleParticipationPerYear = mean(FemaleParticipation),
+         MedianFemaleParticipationPerYear = median(FemaleParticipation),
+         SumFemaleParticipationPerYear = sum(FemaleParticipation))
 
-ggplot(WomenPerThreadID.q2, aes(x = Year, y = AvgFemaleParticipationPerYear)) +
-  geom_point() + ggtitle("Female Participation per Year", subtitle = "is slightly increasing") + ylab("Avarage Female Participation") +
-  geom_smooth(method = "lm", se = T, show.legend = TRUE, span = 0.3) +
-  scale_y_continuous(breaks = seq(0, 1, by = 0.1), limits = c(0, 1)) +
-  scale_x_continuous(breaks = pretty(WomenPerThreadID.q2$Year, n = 19)) +
-  theme_minimal() + scale_fill_ptol() 
+ratio <- edgeDS_conversations_q1$Total_Female_Contributions/edgeDS_conversations_q1$Total_Contributions
 ```
+
+Depending on how one calculates the (avarage) female participitation, it has still a growing trend. 
+
+```{r, fig.height=8, fig.width=15, message=F, warning=F}
+q1 <- ggplot(PeoplePerThreadID, aes(x = Year, y = AvgFemaleParticipationPerYear)) +
+  geom_point() + 
+  ggtitle("Female Participation per Year is slightly increasing", 
+          subtitle = "Calculatation based on avaraging 'Female Participation' (from dataset)") +
+  geom_line() + 
+  ylab("Avarage Female Participation") +
+  geom_smooth(method = "lm", se = T, show.legend = TRUE) +
+  scale_y_continuous(breaks = seq(0, 1, by = 0.1), limits = c(0, 1)) +
+  scale_x_continuous(breaks = pretty(PeoplePerThreadID$Year, n = 19)) +
+  theme_minimal() + scale_fill_ptol() 
+
+q2 <- ggplot(edgeDS_conversations_q1, aes(x=Year)) + geom_point(aes(y=ratio)) + geom_line(aes(y=ratio)) +
+  ggtitle("Here it is also growing", 
+          subtitle = "Calculatation based on total fe(male) contributions per year") +
+  theme_minimal() + scale_fill_ptol() + ylab("Total_Female_Contributions/Total_Contributions") +
+  scale_x_continuous(breaks = pretty(edgeDS_conversations_q1$Year, n = 19)) + 
+  scale_y_continuous(breaks = seq(0, 1, by = 0.1), limits = c(0, 1))
+
+grid.arrange(q1,q2, ncol=2)
+```
+
+```{r include=FALSE, message=F, warning=F}
+# Now, remove datasets to free RAM
+rm(PeoplePerThreadID,edgeDS_conversations_q1,women_part_by_year,edgeDS_conversations_q1, q1,q2, r1, r2)
+```
+
+## Correlations
 
 # Hypothesis No. 2: Verbosity 
 
@@ -509,7 +627,6 @@ ggplot(WomenPerThreadID.q2, aes(x = Year, y = AvgFemaleParticipationPerYear)) +
 **First Task:** Define what is the "status". 
 
 **My Definition:** I define "higher status" as being solely dependent on the person's background, workplace (i.e. where he comes from), his/her job (and if academicians, then also the department, discipline and academic rank), whether (s)he has a PhD and from which institution. 
-
 
 ```{r}
 edgeDS_verbosity <- edgeDS %>% 
