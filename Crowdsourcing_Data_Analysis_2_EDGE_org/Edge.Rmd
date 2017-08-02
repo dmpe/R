@@ -24,8 +24,6 @@ knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 
 # Objectives - Crowdsourcing Data Analysis 2
 
-(you have to execute this Rmd file in its directory/folder - not in the root!)
-
 Description set out in <https://docs.google.com/document/d/1fXQBLdWydISskOKhoq8gl5unuwsv7VA3pkKY4IWFS6o/edit>.
 
 In short, trying to confirm or rebut following:
@@ -36,6 +34,36 @@ In short, trying to confirm or rebut following:
  
 When finished, report my results using this survey: <https://esmt.az1.qualtrics.com/jfe/form/SV_eaOyF0q39J6CVKZ>
 
+
+
+## Data
+
+**Type**: 1 for annual question, 2 for conversation
+- Edge does an annual question every year; some examples are "what scientific idea is ready for retirement?" and "What will change everything?" People then write in with their answers. So all of the text is
+written and asynchronous
+- What Edge refers to as a conversation can actually be multiple things. Some of these are written essays by a single person, some are transcripts of a speech, and some are transcripts of a conversation (either between
+two or more guests or an interview).
+
+**AcademicHierarchyStrict** is described as:
+
+1 = Graduate Student
+
+2 = Postdoctoral
+
+3 = Assistant Professor
+
+4 = Associate Professor
+
+5 = Professor
+
+6 = Chaired Professor
+
+**Limited_Information** is described as: equals 1 if we could only find limited information about the person 
+(e.g. they commented in 2013 but we only have their job title from 2012), 0 otherwise
+
+**Role**: Either author (=1) or commentator (=2)
+
+
 ## Settings
 
 You can control the default appearance with options:
@@ -43,6 +71,8 @@ You can control the default appearance with options:
 - `options(tibble.print_max = n, tibble.print_min = m)`: if there are more than n rows, print only the first m rows. Use `options(tibble.print_max = Inf)` to always show all rows.
 
 - `options(tibble.width = Inf)` will print all columns, regardless of the width of the screen.
+
+- You have to execute this Rmd file in its directory/folder - not in the root! of repository.
 
 From [vignette](https://cran.r-project.org/web/packages/tibble/vignettes/tibble.html):
 
@@ -219,10 +249,9 @@ count_numberOfChars_small <- arrange(count(edgeDS, Number.Characters)[, c(2,1)],
 count_numberOfChars <- arrange(count(edgeDS, Number.Characters)[, c(2,1)], desc(n))
 ```
 
-Moreover, out of almost `r nrow(edgeDS)` observations, I can see that `r percent(length(count_numberOfChars$n[count_numberOfChars$n == 1])/nrow(edgeDS))` of comments has a lenght of 1.
+Moreover, out of almost `r nrow(edgeDS)` observations, I can see that **`r percent(length(count_numberOfChars$n[count_numberOfChars$n == 1])/nrow(edgeDS))`** of comments has a lenght of 1.
 
-Another `r percent(length(count_numberOfChars$n[count_numberOfChars$n == 2])/nrow(edgeDS))` of comments has a character 
-lenght of 2.
+Another **`r percent(length(count_numberOfChars$n[count_numberOfChars$n == 2])/nrow(edgeDS))`** of comments has a character lenght of 2.
 
 ```{r}
 kable(head(count_numberOfChars_small, 10), "html",
@@ -232,14 +261,15 @@ kable(head(count_numberOfChars_small, 10), "html",
 
 The most common lenght is `r as.numeric(count_numberOfChars[1,2])` which occurs in `r as.numeric(count_numberOfChars[1,1])` comments.
 
-
 A <strong>*parallel coordinate plot*</strong> shows how many times can a specific number of characters be observed. Here are only 20 vertices - "connections". I let the user figure out what is nicer and more understandable - I like the first one more.
 
 ```{r eval=T, echo=T, fig.height=8, fig.width=15, message=F, warning=F}
 p1 <- ggparcoord(data = count_numberOfChars_small, columns = c(1, 2), scale = "globalminmax") + 
   scale_y_continuous(breaks = seq(0,60, by=2), 
-                     sec.axis = sec_axis(~., name = "Number of characters", breaks = seq(0,60, by=5))) + 
-  labs(y = "Number of occurances", x = "", title = "TOP 20 connections - from # of comments to lenght of comments") +
+                     sec.axis = sec_axis(~., name = "Number of characters", 
+                                         breaks = seq(0,60, by=5))) + 
+  labs(y = "Number of occurances", x = "", 
+       title = "TOP 20 connections - from # of comments to lenght of comments") +
   scale_fill_ptol() + 
   theme_minimal() + 
   theme(axis.title.x=element_blank(), 
@@ -252,8 +282,10 @@ p1 <- ggparcoord(data = count_numberOfChars_small, columns = c(1, 2), scale = "g
 
 p2 <- ggparcoord(data = count_numberOfChars_small, columns = c(2, 1), scale = "globalminmax") + 
   scale_y_continuous(breaks = seq(0,60, by=2), 
-                     sec.axis = sec_axis(~., name = "Number of occurances ", breaks = seq(0,60, by=5))) + 
-  labs(y = "Number of characters", x = "", title = "TOP 20 connections - from lenght of comments to # of comments") +
+                     sec.axis = sec_axis(~., name = "Number of occurances ", 
+                                         breaks = seq(0,60, by=5))) + 
+  labs(y = "Number of characters", x = "", 
+       title = "TOP 20 connections - from lenght of comments to # of comments") +
   scale_fill_ptol() + 
   theme_minimal() + 
   theme(axis.title.x=element_blank(), 
@@ -468,7 +500,7 @@ kable(head(edgeDS_conversations[,1:5]), "html") %>%
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-## Does the ratio of men/women increase over year ?
+## Does the ratio of men/women increase over the years ?
 
 What is number of contributions by both genders per year.
 
@@ -558,11 +590,11 @@ colnames(women_part_by_year)[8] <- "#_of_Females"
 
 ggplot(women_part_by_year, aes(x=Year, y = Female_Contributions)) + 
   geom_point() + facet_grid(Academic ~ HavePhD) + 
-  theme_minimal() + scale_fill_ptol() 
+  theme_minimal() + scale_fill_ptol() + ggtitle("Female contributions and impact of being academician with/out PhD.")
 
 ggplot(women_part_by_year, aes(x=Year, y = Female_Contributions)) + 
   geom_point() + facet_grid(AuthorAndCommenter ~ TwoAuthors) + 
-  theme_minimal() + scale_fill_ptol() 
+  theme_minimal() + scale_fill_ptol() + ggtitle("Female contributions to the articles where the author and commenter is same person", subtitle = "and where comments can be written by two people")
 
 ggplot(women_part_by_year, aes(x=Year, y = Female_Contributions)) + 
   geom_point() + facet_grid(Live ~ . ) + 
@@ -571,7 +603,7 @@ ggplot(women_part_by_year, aes(x=Year, y = Female_Contributions)) +
 
 ## Female participation per Year
 
-Prepare data for later use.
+First, again prepare the data for later use.
 
 ```{r}
 PeoplePerThreadID <- edgeDS_conversations %>% 
@@ -589,7 +621,7 @@ PeoplePerThreadID <- edgeDS_conversations %>%
 ratio <- edgeDS_conversations_q1$Total_Female_Contributions/edgeDS_conversations_q1$Total_Contributions
 ```
 
-Depending on how one calculates the (avarage) female participitation, it has still a growing trend. 
+Independanly of how one calculates the (avarage) female participitation, the growing is still trend. 
 
 ```{r, fig.height=8, fig.width=15, message=F, warning=F}
 q1 <- ggplot(PeoplePerThreadID, aes(x = Year, y = AvgFemaleParticipationPerYear)) +
@@ -613,12 +645,42 @@ q2 <- ggplot(edgeDS_conversations_q1, aes(x=Year)) + geom_point(aes(y=ratio)) + 
 grid.arrange(q1,q2, ncol=2)
 ```
 
-```{r include=FALSE, message=F, warning=F}
-# Now, remove datasets to free RAM
-rm(PeoplePerThreadID,edgeDS_conversations_q1,women_part_by_year,edgeDS_conversations_q1, q1,q2, r1, r2)
+## Correlations
+
+Idea: If an author is a woman, then there is potentially a higher engagement with other women. Yet correlation doesnt confirm this. 
+
+```{r}
+cor_data <- edgeDS %>% 
+  filter(Role == 1, Gender == "Female", Type == 2) %>% 
+  select(-Link, -Id_num, -ThreadId, -Year, -Title,-Role,-Type, -Order, -Text,-Limited_Information,-Gender, -starts_with("dummy"))
+
+all_factors_names <- as.data.frame(sapply(cor_data, is.factor))
+all_factors_names$name <- rownames(all_factors_names)
+all_factors_names <- all_factors_names[all_factors_names$`sapply(cor_data, is.factor)` == TRUE,]
+cor_data <- cor_data[ , !(names(cor_data) %in% all_factors_names$name)]
+
+
+all_char_names <- as.data.frame(sapply(cor_data, is.character))
+all_char_names$name <- rownames(all_char_names)
+all_char_names <- all_char_names[all_char_names$`sapply(cor_data, is.character)` == TRUE,]
+cor_data <- cor_data[ , !(names(cor_data) %in% all_char_names$name)]
+cor_data <- cor_data[ , -c(26:106)]
+
+
+M <- cor(as.data.frame(cor_data), use = "pairwise.complete.obs")
+
+cor(cor_data$Female_Contributions, cor_data$UniqueFemaleContributors)
+cor(cor_data$FemaleParticipation, cor_data$UniqueFemaleParticipation)
+corrplot(M)
 ```
 
-## Correlations
+
+```{r include=FALSE, message=F, warning=F}
+# Now, remove datasets to free RAM
+rm(PeoplePerThreadID,edgeDS_conversations_q1,women_part_by_year, all_char_names,
+   edgeDS_conversations_q1, q1,q2, r1, r2, all_factors_names, cor_data)
+```
+
 
 # Hypothesis No. 2: Verbosity 
 
@@ -626,7 +688,7 @@ rm(PeoplePerThreadID,edgeDS_conversations_q1,women_part_by_year,edgeDS_conversat
 
 **First Task:** Define what is the "status". 
 
-**My Definition:** I define "higher status" as being solely dependent on the person's background, workplace (i.e. where he comes from), his/her job (and if academicians, then also the department, discipline and academic rank), whether (s)he has a PhD and from which institution. 
+**My Definition:** I define "higher status" as being solely dependent on the person's background, workplace (i.e. where he comes from), his/her job (and if academicians, then also the department, discipline and academic rank, citations), whether (s)he has a PhD and from which institution. 
 
 ```{r}
 edgeDS_verbosity <- edgeDS %>% 
@@ -636,24 +698,7 @@ edgeDS_verbosity <- edgeDS %>%
 
 ## Compare people based on their Job Title, Academic Department & Discipline, etc. in terms of how much did they write to conversation and annual questions.
 
-**AcademicHierarchyStrict** is described as:
 
-1 = Graduate Student
-
-2 = Postdoctoral
-
-3 = Assistant Professor
-
-4 = Associate Professor
-
-5 = Professor
-
-6 = Chaired Professor
-
-**Limited_Information** is described as: equals 1 if we could only find limited information about the person 
-(e.g. they commented in 2013 but we only have their job title from 2012), 0 otherwise
-
-**Role**: Either author (=1) or commentator (=2)
 
 <https://stackoverflow.com/a/4700136>
 
@@ -723,10 +768,13 @@ ggplot(edgeDS_verbosity, aes(PhD_Institution_SR_Bin, Number.Characters)) + geom_
 
 ggplot(edgeDS_verbosity, aes(AcademicHierarchyStrict, Number.Characters)) + geom_boxplot()
 
+ggplot(edgeDS_verbosity, aes(Gender, Number.Characters)) + geom_boxplot()
+
 ggplot(edgeDS_verbosity, aes(HavePhD, Number.Characters)) + geom_boxplot()  # More Verbose = yes
 
 edgeDS_verbosity_hphd_y <- edgeDS_verbosity %>% filter(HavePhD == 1) # how much those with PhD write ?
 mean(edgeDS_verbosity_hphd_y$Number.Characters)
+
 edgeDS_verbosity_hphd_n <- edgeDS_verbosity %>% filter(HavePhD == 0) # how much those without PhD write ?
 mean(edgeDS_verbosity_hphd_n$Number.Characters)
 ```
@@ -742,7 +790,7 @@ gg_gender <- ggplot(edgeDS_verbosity, aes(Gender, Number.Characters)) + geom_box
 # ggplotly(gg_gender, width = 672, height = 480)
 ```
 
-Create bins for h-index and i10-index (citations)
+Create bins for h-index and i10-index (**citations**)
 
 ```{r}
 edgeDS_verbosity$hindex_bin <- cut(edgeDS_verbosity$H_Index, breaks=c(0,15, 30, 45, 60, 75, 90, 105, 120, 135, 150), labels=c("0-15","15-30","30-45", "45-60", "60-75", "75-90", "90-105", "105-120", "120-135", "135-150"))
