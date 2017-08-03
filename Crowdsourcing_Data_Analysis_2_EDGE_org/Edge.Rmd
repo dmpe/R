@@ -34,8 +34,6 @@ In short, trying to confirm or rebut following:
  
 When finished, report my results using this survey: <https://esmt.az1.qualtrics.com/jfe/form/SV_eaOyF0q39J6CVKZ>
 
-
-
 ## Data
 
 **Type**: 1 for annual question, 2 for conversation
