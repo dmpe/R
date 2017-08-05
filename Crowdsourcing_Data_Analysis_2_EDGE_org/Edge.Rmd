@@ -75,7 +75,7 @@ two or more guests or an interview).
 
 **Academic**: 1 = the person is in academia, 0 = they are not
 
-**_Other_** columns are described in the corresponding **PDF** file. 
+**_Other_** columns are described in the corresponding [**PDF** file](https://github.com/dmpe/r). 
 
 ***
 
@@ -110,9 +110,8 @@ library(tidyr)
 #library(mi)
 #library(Amelia)
 library(VIM)
-library(e1071)
+library(moments)
 library(devtools)
-
 
 # markdown Rmd + table styling
 library(kableExtra)
@@ -148,9 +147,15 @@ edgeDS <- read_csv("edge1.1EditedFixed.csv", na = c("NA", "", " ", "#N/A"), trim
 # edgeDS <- edgeDS[-c(1817),]
 
 # Replace 'Not Available' & 'Pending' with NA
-
 edgeDS$PhD_Year[edgeDS$PhD_Year == "Not Available"] <- NA
 edgeDS$PhD_Year[edgeDS$PhD_Year == "Pending"] <- NA
+
+# Aha...
+edgeDS$Academic[edgeDS$Id == "david_c_geary"] <- 1
+
+#Gender Issues
+edgeDS$Male[edgeDS$Id == "benedict_carey"] <- 1
+edgeDS$Female[edgeDS$Id == "benedict_carey"] <- 0
 ```
 ***
 
@@ -170,7 +175,7 @@ List variables with most missing values: 41 have some missing values
 mis <- edgeDS[, -grep("dummy|Unique|Contributions|Numerals", colnames(edgeDS))]
 
 arrange(aggr(mis, col=mdc(1:2), numbers=TRUE, sortVars=TRUE, labels=names(mis), 
-        cex.axis = .4, gap=3, prop = F, plot = F)$missings, desc(Count))[1:50, ]
+        cex.axis = .4, gap=3, prop = F, plot = F)$missings, desc(Count))[1:43, ]
 ```
 
 ```{r, eval=FALSE, echo=FALSE}
@@ -534,9 +539,9 @@ rm(count_numberOfChars, year_aca_byGroup.long, year_aca_sum, edgeDS_academicians
 
 # Hypothesis No. 1: Women's tendency 
 
-> Hypothesis 1: "A woman's tendency to participate actively in the conversation correlates positively with the number of (i guess unique) females in the discussion."
+> Hypothesis 1: "A woman's tendency to participate actively in the conversation correlates positively with the number of females in the discussion."
 
-I start however first with a broad look on the data. Hence, I create data that can be used later (prints only 5 columns).
+I start however first with a broad look on the data. Hence, I create data that can be used for later (prints only 5 columns).
 
 ```{r}
 edgeDS_conversations <- edgeDS %>% 
@@ -554,7 +559,7 @@ kable(head(edgeDS_conversations[,1:5]), "html") %>%
 
 ## Does the ratio of men/women increase over the years ?
 
-What is number of contributions (# of comments) and unique people who contribute by gender per year.
+What is number of contributions (~ # of comments) and unique people who contribute by gender per year.
 
 ```{r}
 edgeDS_conversations_q1 <- edgeDS_conversations %>% 
@@ -622,9 +627,9 @@ grid.arrange(r1, r2, ncol= 2)
 ## Faceting on various variables
 
 We can now look on how the participitation of women has increased over the years - considering that there might be 
-differences between those in Academia with PhD. or where the author and commenter are the same person.  
+differences between those in Academia with PhD or where the author and commenter are the same person.  
 
-The plot below shows e.g. that there are no women who are academicians and dont have their PhD. Every women is either academician with PhD. (makes sence) or is a non-academician with either PhD or without 
+The plot below shows e.g. that there are no women who are academicians and dont have their PhD. Every women is either academician with PhD. or is a non-academician with either PhD or without one. 
 
 ```{r, fig.height=8, fig.width=15, message=F, warning=F}
 women_part_by_year <- edgeDS_conversations %>% 
@@ -693,27 +698,60 @@ grid.arrange(d3,d4,ncol=2)
 
 ***
 
-```{r}
-e1071::skewness(women_part_by_year$Female_Contributions[women_part_by_year$Live == "Transcribed TP"])
-```
+`Skewness` function confirms that all distributions are highly skewed. E.g. contributions of women to the transcribed text pieces (top-left plot) is visibly skewed to the left (being '+') - 
+i.e. the [curve is right-leaning](https://en.wikipedia.org/wiki/Skewness#Introduction).
 
-`Skewness` function confirms that contributions of women to the transcribed text pieces is visibly skewed to the left (being '+') - i.e. the [curve is right-leaning](https://en.wikipedia.org/wiki/Skewness#Introduction).
+\
+
+On the other hand, the bottom-left distribution is more normally distrubuted than others having the lowest skewness of just 1.4. 
+
+We can also conduct skewness test of D'Agostino. This is also confirmed because of the low p-value, i.e. `the null-hypothesis that [our distributions] are normally distributed can be rejected, which is the case here`
+
+
+
+```{r, message=F, warning=F}
+skew_fem_tran <- moments::skewness(women_part_by_year$Female_Contributions[women_part_by_year$Live == "Transcribed TP"])
+agostino.test(women_part_by_year$Female_Contributions[women_part_by_year$Live == "Transcribed TP"])
+
+skew_fem_writ <- moments::skewness(women_part_by_year$Female_Contributions[women_part_by_year$Live == "Written TP"])
+agostino.test(women_part_by_year$Female_Contributions[women_part_by_year$Live == "Written TP"])
+
+
+
+skew_m_tran <- moments::skewness(men_part_by_year$Male_Contributions[men_part_by_year$Live == "Transcribed TP"])
+
+skew_m_writ <- moments::skewness(men_part_by_year$Male_Contributions[men_part_by_year$Live == "Written TP"])
+
+df_annotationsForFacets <- data.frame(Live = c("Transcribed TP", "Written TP", "Transcribed TP", "Written TP"), 
+                                      value = c(skew_fem_tran, skew_fem_writ, skew_m_tran, skew_m_writ), 
+                                      x = 2005, y= c(30, 30, 300, 300))
+
+```
+[Source #1](https://statbandit.wordpress.com/2016/10/20/annotated-facets-with-ggplot2/) / [Source #2](http://r-statistics.co/Statistical-Tests-in-R.html) / [Source #3](http://www.real-statistics.com/tests-normality-and-symmetry/statistical-tests-normality-symmetry/dagostino-pearson-test/)
 
 ```{r, fig.height=8, fig.width=15, message=F, warning=F}
 d5 <- ggplot(women_part_by_year, aes(x=Year, y = Female_Contributions)) + 
   geom_point() + facet_grid(Live ~ . ) +
   theme_minimal() + scale_fill_ptol() + 
   ggtitle("Female contributions to the Transcribed or Written Text Pieces", 
-          subtitle = "Somewhat skew to the right - right-leaning curve")
-
+          subtitle = "Somewhat skew to the right - right-leaning curve") + 
+  geom_text(data = df_annotationsForFacets[1:2,], 
+            aes(x=x, y=y, label = paste("Skewness = ", round(value,2))), 
+            inherit.aes = FALSE)
+            
+            
 d6 <- ggplot(men_part_by_year, aes(x=Year, y = Male_Contributions)) + 
   geom_point() + facet_grid(Live ~ . ) + 
   theme_minimal() + scale_fill_ptol() + 
   ggtitle("Male contributions to the Transcribed or Written Text Pieces", 
-          subtitle = "Relatively equally spread")
+          subtitle = "Relatively equally spread") +
+  geom_text(data = df_annotationsForFacets[3:4,], 
+            aes(x=x, y=y, label = paste("Skewness = ", round(value,2))), 
+            inherit.aes = FALSE)
 
 grid.arrange(d5,d6,ncol=2)
 ```
+[Source #1](https://brownmath.com/stat/shape.htm) / 
 
 ***
 
