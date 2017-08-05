@@ -112,6 +112,7 @@ library(tidyr)
 library(VIM)
 library(moments)
 library(devtools)
+library(corrplot)
 
 # markdown Rmd + table styling
 library(kableExtra)
@@ -707,20 +708,18 @@ On the other hand, the bottom-left distribution is more normally distrubuted tha
 
 We can also conduct skewness test of D'Agostino. This is also confirmed because of the low p-value, i.e. `the null-hypothesis that [our distributions] are normally distributed can be rejected, which is the case here`
 
-
-
 ```{r, message=F, warning=F}
-skew_fem_tran <- moments::skewness(women_part_by_year$Female_Contributions[women_part_by_year$Live == "Transcribed TP"])
+skew_fem_tran <- skewness(women_part_by_year$Female_Contributions[women_part_by_year$Live == "Transcribed TP"])
 agostino.test(women_part_by_year$Female_Contributions[women_part_by_year$Live == "Transcribed TP"])
 
-skew_fem_writ <- moments::skewness(women_part_by_year$Female_Contributions[women_part_by_year$Live == "Written TP"])
+skew_fem_writ <- skewness(women_part_by_year$Female_Contributions[women_part_by_year$Live == "Written TP"])
 agostino.test(women_part_by_year$Female_Contributions[women_part_by_year$Live == "Written TP"])
 
 
 
-skew_m_tran <- moments::skewness(men_part_by_year$Male_Contributions[men_part_by_year$Live == "Transcribed TP"])
+skew_m_tran <- skewness(men_part_by_year$Male_Contributions[men_part_by_year$Live == "Transcribed TP"])
 
-skew_m_writ <- moments::skewness(men_part_by_year$Male_Contributions[men_part_by_year$Live == "Written TP"])
+skew_m_writ <- skewness(men_part_by_year$Male_Contributions[men_part_by_year$Live == "Written TP"])
 
 df_annotationsForFacets <- data.frame(Live = c("Transcribed TP", "Written TP", "Transcribed TP", "Written TP"), 
                                       value = c(skew_fem_tran, skew_fem_writ, skew_m_tran, skew_m_writ), 
@@ -880,12 +879,13 @@ edgeDS_verbosity <- edgeDS %>%
 
 ## Look at different variables and how they impact how much people write to conversation and annual questions.
 
-*Academia* <> Number of characters
+Group of *academia* <> Number of characters
 
 ```{r, fig.height=8, fig.width=10, message=F, warning=F}
 ggplotly(
   ggplot(edgeDS_verbosity, aes(Academic, Number.Characters)) + geom_boxplot() + 
-  scale_y_continuous(breaks = seq(0,1000, by = 100), limits = c(0,1000)) + 
+  scale_y_continuous(breaks = seq(0,4000, by = 200), limits = NA) + 
+  coord_cartesian(ylim =c(0,4000)) +
   xlab("Group") + ylab("Number of characters") + 
   ggtitle("Number of characters by group (both genders)") +
   theme_minimal() + scale_fill_ptol()
@@ -912,13 +912,12 @@ Does the number of characters in the comments depend anyhow on person's *job tit
 ```{r, fig.height=8, fig.width=10, message=F, warning=F}
 ggplotly(
   ggplot(edgeDS_verbosity, aes(Job_Title_S, Number.Characters)) + geom_boxplot() + 
-    coord_flip() + 
-    scale_y_continuous(breaks = seq(0,2000, by = 200), limits = c(0,2000)) +  
+    scale_y_continuous(breaks = seq(0,20000, by = 1000), limits = c(0,190000)) + 
     xlab("Job Title") + ylab("Number of characters") + 
-    ggtitle("Graduate students dont write any comments it seems", 
+    ggtitle("When graduate students write, then it is always quite a lot", 
             subtitle = "maybe there are some in NA or Other bins") +
-    theme_minimal() + scale_fill_ptol() 
-)
+    theme_minimal() + scale_fill_ptol() + coord_flip(ylim =c(0,6000))
+) %>% layout(margin = list(l = 200))
 ```
 
 ***
@@ -927,9 +926,9 @@ Also, of those academic people, *departments/fields* they come from and work in 
 
 ```{r, fig.height=8, fig.width=10, message=F, warning=F}
 ggplotly(
-  ggplot(edgeDS_verbosity, aes(Department_S, Number.Characters)) + geom_boxplot() + 
-    coord_flip() + 
-    scale_y_continuous(breaks = seq(0,2000, by = 200), limits = c(0,2000)) +
+  ggplot(edgeDS_verbosity, aes(Department_S, Number.Characters)) + geom_boxplot() +
+    coord_flip(ylim =c(0,45000)) +
+    scale_y_continuous(breaks = seq(0,45000, by = 5000), limits = c(0,190000)) +
     xlab("Academic Department") + ylab("Number of characters") + 
     theme_minimal() + scale_fill_ptol() 
 )
@@ -942,26 +941,28 @@ ggplotly(
 ```{r, fig.height=8, fig.width=10, message=F, warning=F}
 ggplotly(
   ggplot(edgeDS_verbosity, aes(Discipline, Number.Characters)) + 
-    geom_boxplot() + coord_flip()  + 
+    geom_boxplot() + #coord_flip()  + 
     xlab("Academic Discipline") + ylab("Number of characters") + 
-    scale_y_continuous(breaks = seq(0, 100000, by = 1000), limits = c(0, 10000)) + 
-    stat_summary(fun.y="mean", geom="point", size=2.5, color="green") +  
+    scale_y_continuous(breaks = seq(0, 100000, by = 1000), limits = NA) + 
+    coord_cartesian(ylim =c(0,10000)) +  
+    stat_summary(fun.y=mean, fun.args = list(na.rm = F), 
+                 na.rm = T, geom="point", size=2.5, color="green") +  
     ggtitle("Box Plot of number of characters by academic discipline", 
          subtitle = "Green Point shows avarage/mean") +
     theme_minimal() + scale_fill_ptol()  
 )
 
 edgeDS_verbosity_disc_diff <- edgeDS_verbosity %>% 
-  ungroup() %>% 
-  select(Discipline, Number.Characters) %>% 
-  group_by(Discipline) %>% 
-  summarize(min_Number.Characters = min(Number.Characters), 
+  dplyr::ungroup() %>% 
+  dplyr::select(Discipline, Number.Characters) %>% 
+  dplyr::group_by(Discipline) %>% 
+  dplyr::summarize(min_Number.Characters = min(Number.Characters), 
             #minDisciplineName = Discipline[which.min(Number.Characters)], 
             max_Number.Characters = max(Number.Characters), 
-            #maxDisciplineName = Discipline[which.max(Number.Characters)]
-            mean_Number.Characters = round(mean(Number.Characters),1)
+            #maxDisciplineName = Discipline[which.max(Number.Characters)],
+            mean_Number.Characters = round(mean(Number.Characters, na.rm = T),2)
             ) %>% 
-  mutate(difference_max_min = max_Number.Characters-min_Number.Characters)
+  dplyr::mutate(difference_max_min = max_Number.Characters-min_Number.Characters)
 ```
 [Source #1](https://stackoverflow.com/a/30196561)
 
@@ -984,8 +985,9 @@ The *Shanghai Ranking* of their PhD Institution vs. number of characters they wr
 ggplotly(
   ggplot(edgeDS_verbosity, aes(PhD_Institution_SR_Bin, Number.Characters)) + 
     geom_boxplot() +
+    coord_cartesian(ylim =c(0,7000)) + 
     ggtitle("Shanghai Rankings of their PhD Institution")+
-    scale_y_continuous(breaks = seq(0,2000, by = 200), limits = c(0,2000)) +
+    scale_y_continuous(breaks = seq(0,10000, by = 500), limits = c(0,190000)) +
     theme_minimal() + scale_fill_ptol()
 ) %>% layout(xaxis = list(ticktext = c("1-50", "51-100", 
                           "101-150", "151-200", 
@@ -1000,7 +1002,8 @@ By *AcademicHierarchyStrict*:
 ggplotly(
   ggplot(edgeDS_verbosity, aes(AcademicHierarchyStrict, Number.Characters)) + 
   geom_boxplot() +
-  scale_y_continuous(breaks = seq(0,2000, by = 200), limits = c(0,2000)) +
+  coord_cartesian(ylim =c(0,6000)) + 
+  scale_y_continuous(breaks = seq(0,10000, by = 500), limits = c(0,190000)) +
   theme_minimal() + scale_fill_ptol()
 ) %>% layout(xaxis = list(title = "Academic Hierarchy", 
              ticktext = c("Graduate Student", "Postdoctoral", 
@@ -1010,20 +1013,16 @@ ggplotly(
 
 ***
 
-By *Gender*
+More verbose when they have PhD ? Yes!
 
 ```{r, fig.height=8, fig.width=10, message=F, warning=F}
 ggplotly(
-  ggplot(edgeDS_verbosity, aes(Gender, Number.Characters)) + geom_boxplot() +
-    scale_y_continuous(breaks = seq(0,2000, by = 200), limits = c(0,2000)) +
+  ggplot(edgeDS_verbosity, aes(HavePhD, Number.Characters)) + geom_boxplot() +
+    coord_cartesian(ylim =c(0,4000)) + 
+    scale_y_continuous(breaks = seq(0,10000, by = 250), limits = c(0,190000)) +
     theme_minimal() + scale_fill_ptol()
-) %>% layout(xaxis = list(ticktext = c("Male", "Female", "NA")))
-```
-
-***
-
-```{r, fig.height=8, fig.width=10, message=F, warning=F}
-ggplot(edgeDS_verbosity, aes(HavePhD, Number.Characters)) + geom_boxplot()  # More Verbose = yes
+) %>% layout(xaxis = list(title = "Are they Doctor of Philosophy?", 
+                          ticktext = c("Dont have PhD", "Have PhD", "NA")))
 ```
 
 How much people with/out PhD write on avarage ?
@@ -1038,29 +1037,75 @@ mean(edgeDS_verbosity_hphd_n$Number.Characters)
 
 ***
 
-Potentially, also interesting by role and debate size:
+By *Gender*
 
-```{r}
-ggplot(edgeDS_verbosity, aes(DebateSize, Number.Characters)) + geom_boxplot(aes(group = cut_width(DebateSize, 50)))
-
-ggplot(edgeDS_verbosity, aes(Role, Number.Characters)) + geom_boxplot() 
-
-ggplot(edgeDS_verbosity, aes(Gender, Number.Characters)) + geom_boxplot()
-# ggplotly(gg_gender, width = 672, height = 480)
+```{r, fig.height=8, fig.width=10, message=F, warning=F}
+ggplotly(
+  ggplot(edgeDS_verbosity, aes(Gender, Number.Characters)) + geom_boxplot() +
+    coord_cartesian(ylim =c(0,5000)) + 
+    scale_y_continuous(breaks = seq(0,10000, by = 500), limits = c(0,190000)) +
+    theme_minimal() + scale_fill_ptol()
+) %>% layout(xaxis = list(title = "Gender", ticktext = c("Male", "Female", "NA")))
 ```
 
+***
+
+Role ?
+
+```{r,fig.height=8, fig.width=10, message=F, warning=F}
+ggplotly(
+  ggplot(edgeDS_verbosity, aes(Role, Number.Characters)) + geom_boxplot() +
+  coord_cartesian(ylim =c(0,5000)) + 
+  scale_y_continuous(breaks = seq(0,10000, by = 500), limits = c(0,190000))
+) %>% layout(xaxis = list(title = "Who were debaters?", ticktext = c("Author", "Commentator")))
+```
+
+***
+
+The most comments are written when the debate size is below 200 people. 
+
+```{r}
+ggplot(edgeDS_verbosity, aes(DebateSize, Number.Characters)) +
+    coord_cartesian(ylim =c(0,7000)) + 
+    scale_y_continuous(breaks = seq(0,10000, by = 500), limits = c(0,190000)) +
+    geom_boxplot(aes(group = cut_interval(DebateSize, 10)))
+```
+
+***
 Create bins for h-index and i10-index (**citations**)
 
 ```{r}
-edgeDS_verbosity$hindex_bin <- cut(edgeDS_verbosity$H_Index, breaks=c(0,15, 30, 45, 60, 75, 90, 105, 120, 135, 150), labels=c("0-15","15-30","30-45", "45-60", "60-75", "75-90", "90-105", "105-120", "120-135", "135-150"))
-ggplot(edgeDS_verbosity, aes(hindex_bin, Number.Characters)) + geom_boxplot() 
+edgeDS_verbosity$hindex_bin <- cut(edgeDS_verbosity$H_Index, breaks=seq(0,150, by = 15), labels=c("0-15","15-30","30-45", "45-60", "60-75", "75-90", "90-105", "105-120", "120-135", "135-150"))
 
-#TODO
-edgeDS_verbosity$i10_bin <- cut(edgeDS_verbosity$i10_Index, breaks=seq(0,600, by = 40))
-ggplot(edgeDS_verbosity, aes(i10_bin, Number.Characters)) + geom_boxplot() 
+ggplotly(
+  ggplot(edgeDS_verbosity, aes(hindex_bin, Number.Characters)) + 
+    geom_boxplot() +
+    coord_cartesian(ylim =c(0,7000)) + 
+    scale_y_continuous(breaks = seq(0,10000, by = 500), limits = c(0,190000))
+)
 ```
 
+***
+
+```{r}
+edgeDS_verbosity$i10_bin <- cut(edgeDS_verbosity$i10_Index, breaks=seq(0,600, by = 40))
+
+ggplotly(
+  ggplot(edgeDS_verbosity, aes(i10_bin, Number.Characters)) + geom_boxplot() +
+    geom_boxplot() +
+    coord_cartesian(ylim =c(0,13000)) +
+    scale_y_continuous(breaks = seq(0,15000, by = 1000), limits = c(0,190000))
+)
+```
+
+## Compare highest ranking people with all the rest.
+
 Filter Phd + high ranking + work -> vs. all others
+
+
+
+
+# R Session/Devtools
 
 ```{r}
 devtools::session_info()
