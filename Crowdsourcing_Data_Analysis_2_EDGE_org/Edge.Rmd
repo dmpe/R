@@ -1,18 +1,18 @@
 ---
 title: "Analysis of Edge.org Data"
 author: "DMPE @ GitHub"
-date: "August 5, 2017"
+date: "`r format(Sys.time(), '%b %d %Y')`"
 output: 
  html_notebook:
    css: report_styles.css
    highlight: haddock
    number_sections: yes
+   self_contained: no
    theme: readable
-   self_contained: false
    toc: yes
    toc_float:
-     collapsed: true
-     smooth_scroll: true
+     collapsed: yes
+     smooth_scroll: yes
      toc_depth: 3
 editor_options:
   chunk_output_type: console
@@ -1108,7 +1108,7 @@ Filter Phd + high ranking + work -> vs. all others
 # R Session/Devtools
 
 ```{r}
-devtools::session_info()
+sessionInfo()
 ```
 
 
