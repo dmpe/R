@@ -1101,9 +1101,24 @@ ggplotly(
 )
 ```
 
+
+```{r}
+rm(edgeDS_verbosity_aca_n, edgeDS_verbosity_aca_y, df_annotationsForFacets, edgeDS_verbosity_hphd_y, 
+   edgeDS_verbosity_disc_diff, edgeDS_verbosity_hphd_n)
+```
+
+***
+
 ## Compare highest ranking people with all the rest.
 
 Filter Phd + high ranking + work -> vs. all others
+
+High Flisher is somebody in Academia with PhD. 
+
+```{r}
+high_flighers <- edgeDS %>% 
+  filter(Academic == 1 & HavePhD == 1 & PhD_Institution_SR_Bin == 1)
+```
 
 
 
