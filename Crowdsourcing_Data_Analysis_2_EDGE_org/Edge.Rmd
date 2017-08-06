@@ -112,7 +112,6 @@ library(tidyr)
 library(VIM)
 library(moments)
 library(devtools)
-library(corrplot)
 
 # markdown Rmd + table styling
 library(kableExtra)
@@ -125,14 +124,17 @@ library(gridExtra)
 library(GGally)
 library(ggthemes)
 library(plotly)
+library(visdat)
+library(corrplot)
 ```
 
 ***
 
 ## Read Data
 
-```{r, eval=T, echo=T, warning=FALSE, message=FALSE}
+```{r, eval=T, echo=T, warning=FALSE, message=FALSE, fig.height=8, fig.width=10}
 edgeDS <- read_csv("edge1.1EditedFixed.csv", na = c("NA", "", " ", "#N/A"), trim_ws = T)
+vis_dat(edgeDS[,1:70], warn_large_data = F)
 ```
 
 ***
@@ -240,8 +242,9 @@ edgeDS$Year <- year(as.Date(numToChar(edgeDS$Year), "%Y"))
 
 What is the structure of dataset?
 
-```{r}
+```{r, fig.height=8, fig.width=10}
 str(edgeDS[,5:15])
+vis_dat(edgeDS[,1:70], warn_large_data = F)
 ```
 
 Do not evaluate code below because the output would be too large. 
