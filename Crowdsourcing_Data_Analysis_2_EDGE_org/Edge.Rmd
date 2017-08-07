@@ -2,18 +2,18 @@
 title: "Analysis of Edge.org Data"
 author: "DMPE @ GitHub"
 date: "`r format(Sys.time(), '%b %d %Y')`"
-output: 
- html_notebook:
-   css: report_styles.css
-   highlight: haddock
-   number_sections: yes
-   self_contained: true
-   theme: readable
-   toc: yes
-   toc_float:
-     collapsed: yes
-     smooth_scroll: yes
-     toc_depth: 3
+output:
+  html_notebook:
+    css: report_styles.css
+    highlight: haddock
+    number_sections: yes
+    self_contained: yes
+    theme: readable
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+      toc_depth: 3
 editor_options:
   chunk_output_type: console
 ---
@@ -25,6 +25,8 @@ library(knitr)
 library(rmarkdown)
 knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 ```
+
+- You should open the file in a browser other than Firefox (sic!) - Microsoft Edge is fine. 
 
 - In order to R Notebook HTML file, you have to execute this Rmd file in its directory/folder - not in the root! of repository `setwd("....where Rmd is located...") && rmarkdown::render("Edge.Rmd")`.
 
