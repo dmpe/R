@@ -61,11 +61,11 @@ two or more guests or an interview).
 
 **Role**: Either author (=1) or commentator (=2)
 
-**FemaleContributions**: the number of times a woman speaks in a specific conversation, it does not always equal the number of unique women in a conversation (see below)
+**Female Contributions**: the number of times a woman speaks in a specific conversation, it does not always equal the number of unique women in a conversation (see below)
 
-**FemaleParticipation**: simply femalecontributors/(number of total contributions); the percentage of comments that are made by a woman
+**Female Participation**: simply female contributors/(number of total contributions); the percentage of comments that are made by a woman
 
-**Unique Contributors**: UniqueMaleContributors + UniqueFemaleContributors
+**Unique Contributors**: Unique Male Contributors + Unique Female Contributors
 
 **Unique Male Contributors**: the number of unique male contributors 
 
@@ -263,13 +263,13 @@ summary(edgeDS) # print summaries of each variable
 
 **But first** take a broader look on the dataset. `tail()`/`head()` will report (i.e. print) only last/first 6 values. 
 
-Who has contributed the most in all discussions ?
+Who has contributed the most in all discussions?
 
 ```{r}
 tail(sort(table(edgeDS$Id))) 
 ```
 
-How many unique participants are there ?
+How many unique participants are there?
 
 ```{r}
 length(unique(edgeDS$Id)) 
@@ -305,7 +305,7 @@ kable(head(count_numberOfChars_small, 10), "html",
   kable_styling(bootstrap_options = c("hover", "condensed"), full_width = F)
 ```
 
-The most common lenght of the comment is `r as.numeric(count_numberOfChars[1,2])` which occurs in `r as.numeric(count_numberOfChars[1,1])` comments.
+The most common length of a comment is `r as.numeric(count_numberOfChars[1,2])` which occurs in `r as.numeric(count_numberOfChars[1,1])` comments.
 
 ***
 
@@ -316,8 +316,8 @@ p1 <- ggparcoord(data = count_numberOfChars_small, columns = c(1, 2), scale = "g
   scale_y_continuous(breaks = seq(0,60, by=2), 
                      sec.axis = sec_axis(~., name = "Number of characters", 
                                          breaks = seq(0,60, by=5))) + 
-  labs(y = "Number of occurances", x = "", 
-       title = "TOP 20 connections - from # of comments to lenght of comments") +
+  labs(y = "Number of occurrences", x = "", 
+       title = "TOP 20 connections - from # of comments to length of comments") +
   scale_fill_ptol() + 
   theme_minimal() + 
   theme(axis.title.x=element_blank(), 
@@ -330,10 +330,10 @@ p1 <- ggparcoord(data = count_numberOfChars_small, columns = c(1, 2), scale = "g
 
 p2 <- ggparcoord(data = count_numberOfChars_small, columns = c(2, 1), scale = "globalminmax") + 
   scale_y_continuous(breaks = seq(0,60, by=2), 
-                     sec.axis = sec_axis(~., name = "Number of occurances ", 
+                     sec.axis = sec_axis(~., name = "Number of occurrences", 
                                          breaks = seq(0,60, by=5))) + 
   labs(y = "Number of characters", x = "", 
-       title = "TOP 20 connections - from lenght of comments to # of comments") +
+       title = "TOP 20 connections - from length of comments to # of comments") +
   scale_fill_ptol() + 
   theme_minimal() + 
   theme(axis.title.x=element_blank(), 
@@ -353,7 +353,7 @@ grid.arrange(p1, p2, ncol=2)
 ## Relationship between debate size and academicians.
 
 Namely, what is the relationship between number of all debaters and a group of academicians over the years?
-Did it mean that if you participitated as an academician in the conversations, the debate size was also increasing? 
+Did it mean that if you participated as an academician in the conversations, the debate size was also increasing? 
 
 Let's find it out :) First, however, prepare the dataset.
 
@@ -432,14 +432,14 @@ grid.arrange(g3, g4, ncol=2)
 ```
 
 ```{r, include=FALSE, echo=F, eval=F}
-# And percentages ?
+# And percentages?
 percantage <- percent(year_aca_sum$NumberOf_Academicians_all / year_aca_sum$DebateSize)
 proportions_in_debates <- cbind(year_aca_sum$Year, percantage)
 tail(proportions_in_debates) # show percentages from recent years
 ```
     
 ```{r, message=F, warning=F, eval=F, echo=F}
-> Residuals are not symetrical and "that means that the model predicts certain points that fall far away from the actual observed points". [Source](https://feliperego.github.io/blog/2015/10/23/Interpreting-Model-Output-In-R)
+> Residuals are not symmetrical and "that means that the model predicts certain points that fall far away from the actual observed points". [Source](https://feliperego.github.io/blog/2015/10/23/Interpreting-Model-Output-In-R)
 
 > The model doesnt fit well the actual data. R^2 is low, hence correlation is also low - of just `r percent(summary(year_aca_sum_lm)$r.squared)`
 ```
@@ -469,7 +469,7 @@ kable(head(year_aca_byGroup), "html") %>%
 Clearly, **academicians prevail in majority** of debates as the number of outsiders (non-aca + unknown) declined 
 significantly over last few years. 
 
-Also, the number of participitants in debates does not grow much - the summary statistics are: 
+Also, the number of participants in debates does not grow much - the summary statistics are: 
 `r summary(year_aca_byGroup[2])`. The mean size of conversations is just shy of 300.
 
 ```{r fig.height=8, fig.width=15, message=F, warning=F}
@@ -480,7 +480,7 @@ k1 <- ggplot(data = year_aca_byGroup.long, aes(x = Year, y = value, fill = varia
   geom_line(aes(x = Year, y=DebateSize), data=year_aca_byGroup.long) +
   scale_y_continuous(breaks = seq(0, 1300, by = 100)) + 
   ggtitle("Number and type of debaters per year") + 
-  labs(y = "Number of Participitans") +
+  labs(y = "Number of Participants") +
   theme_minimal() + scale_fill_ptol() + 
   theme(legend.position="none")
 
@@ -641,10 +641,10 @@ grid.arrange(r1, r2, ncol= 2)
 
 ## Faceting on various variables
 
-We can now look on how the participitation of women has increased over the years - considering that there might be 
+We can now look on how the participation of women has increased over the years - considering that there might be 
 differences between those in Academia with PhD or where the author and commenter are the same person.  
 
-The plot below shows e.g. that there are no women who are academicians and dont have their PhD. Every women is either academician with PhD. or is a non-academician with either PhD or without one. 
+The plot below shows e.g. that there are no women who are academicians and don't have their PhD. Every women is either academician with PhD. or is a non-academician with either PhD or without one. 
 
 ```{r, fig.height=8, fig.width=15, message=F, warning=F}
 women_part_by_year <- edgeDS_conversations %>% 
@@ -682,13 +682,13 @@ d1 <- ggplot(women_part_by_year, aes(x=Year, y = Female_Contributions)) +
   geom_point() + facet_grid(Academic ~ HavePhD) + 
   theme_minimal() + scale_fill_ptol() + 
   ggtitle("Female contributions and impact of being academician with/out PhD.", 
-          subtitle = "There are no women in the academicia without PhD.")
+          subtitle = "There are no women in the academia without PhD.")
 
 d2 <- ggplot(men_part_by_year, aes(x=Year, y = Male_Contributions)) + 
   geom_point() + facet_grid(Academic ~ HavePhD) + 
   theme_minimal() + scale_fill_ptol() + 
   ggtitle("Male contributions and impact of being academician with/out PhD.", 
-          subtitle = "Here, there are actually men who dont have PhD. but are in academia")
+          subtitle = "Here, there are actually men who don't have PhD. but are in academia")
 
 grid.arrange(d1,d2,ncol=2)
 ```
@@ -718,7 +718,7 @@ i.e. the [curve is right-leaning](https://en.wikipedia.org/wiki/Skewness#Introdu
 
 \
 
-On the other hand, the bottom-left distribution is more normally distrubuted than others having the lowest skewness of just 1.4. 
+On the other hand, the bottom-left distribution is more normally distributed than others having the lowest skewness of just 1.4. 
 
 We can also conduct skewness test of D'Agostino. This is also confirmed because of the low p-value, i.e. `the null-hypothesis that [our distributions] are normally distributed can be rejected, which is the case here`
 
@@ -788,13 +788,13 @@ PeoplePerThreadID <- edgeDS_conversations %>%
 ratio <- edgeDS_conversations_q1$Total_Female_Contributions/edgeDS_conversations_q1$Total_Contributions
 ```
 
-Independanly of how one calculates the (avarage) female participitation, the trend is still growing. 
+Independently of how one calculates the (average) female participation, the trend is still growing. 
 
 ```{r, fig.height=8, fig.width=15, message=F, warning=F}
 q1 <- ggplot(PeoplePerThreadID, aes(x = Year, y = AvgFemaleParticipationPerYear)) +
   geom_point() + 
   ggtitle("Female Participation per Year is slightly increasing", 
-          subtitle = "Calculatation based on avaraging 'Female Participation' (from dataset)") +
+          subtitle = "Calculation based on averaging 'Female Participation' (from dataset)") +
   geom_line() + 
   ylab("Avarage Female Participation") +
   geom_smooth(method = "lm", se = T, show.legend = TRUE) +
@@ -804,7 +804,7 @@ q1 <- ggplot(PeoplePerThreadID, aes(x = Year, y = AvgFemaleParticipationPerYear)
 
 q2 <- ggplot(edgeDS_conversations_q1, aes(x=Year)) + geom_point(aes(y=ratio)) + geom_line(aes(y=ratio)) +
   ggtitle("Here it is also growing", 
-          subtitle = "Calculatation based on total fe(male) contributions per year") +
+          subtitle = "Calculation based on total fe(male) contributions per year") +
   theme_minimal() + scale_fill_ptol() + ylab("Total_Female_Contributions/Total_Contributions") +
   scale_x_continuous(breaks = pretty(edgeDS_conversations_q1$Year, n = 19)) + 
   scale_y_continuous(breaks = seq(0, 1, by = 0.1), limits = c(0, 1))
@@ -818,7 +818,7 @@ grid.arrange(q1,q2, ncol=2)
 
 For reminder:
 
-> Hypothesis 1: "A woman's tendency to participate actively in the conversation correlates positively with the number of (i guess unique) females in the discussion."
+> Hypothesis 1: "A woman's tendency to participate actively in the conversation correlates positively with the number of (I guess unique) females in the discussion."
 
 ```{r}
 cor_data <- edgeDS %>% 
@@ -844,7 +844,7 @@ M <- cor(as.data.frame(cor_data), use = "pairwise.complete.obs")
 
 **Idea**: If an author is a woman, then there is potentially a higher engagement with other women as well (those could be more interesting to contribute). 
 
-**Result**: Yet correlation - at least for the case of Female Contributions - doesnt confirm this. 
+**Result**: Yet correlation - at least for the case of Female Contributions - doesn't confirm this. 
 
 ```{r}
 cor(cor_data$Female_Contributions, cor_data$UniqueFemaleContributors)
@@ -962,7 +962,7 @@ ggplotly(
     stat_summary(fun.y=mean, fun.args = list(na.rm = F), 
                  na.rm = T, geom="point", size=2.5, color="green") +  
     ggtitle("Box Plot of number of characters by academic discipline", 
-         subtitle = "Green Point shows avarage/mean") +
+         subtitle = "Green Point shows an average/mean") +
     theme_minimal() + scale_fill_ptol()  
 )
 
@@ -1027,7 +1027,7 @@ ggplotly(
 
 ***
 
-More verbose when they have PhD ? Yes!
+More verbose when they have PhD? Yes!
 
 ```{r, fig.height=8, fig.width=10, message=F, warning=F}
 ggplotly(
@@ -1039,7 +1039,7 @@ ggplotly(
                           ticktext = c("Dont have PhD", "Have PhD", "NA")))
 ```
 
-How much people with/out PhD write on avarage ?
+How much people with/out PhD write on average?
 
 ```{r}
 edgeDS_verbosity_hphd_y <- edgeDS_verbosity %>% filter(HavePhD == 1)
