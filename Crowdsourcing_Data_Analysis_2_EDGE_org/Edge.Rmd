@@ -134,12 +134,15 @@ library(corrplot)
 
 ```{r, eval=T, echo=T, warning=FALSE, message=FALSE, fig.height=8, fig.width=10}
 edgeDS <- read_csv("edge1.1EditedFixed.csv", na = c("NA", "", " ", "#N/A"), trim_ws = T)
-vis_dat(edgeDS[,1:70], warn_large_data = F)
 ```
 
 ***
 
 # First some pre-processing
+
+```{r}
+vis_dat(edgeDS[,1:70], warn_large_data = F)
+```
 
 ## Deal with data problems
 
@@ -511,17 +514,24 @@ edgeDS_genderInDebates <- edgeDS %>%
   select(Year, ThreadId, DebateSize, Gender) %>% 
   group_by_all() %>% 
   tally %>% 
-  spread(Gender, n, fill = 0)
+  spread(Gender, n, fill = 0) %>% 
+  ungroup() %>% 
+  select(Year, Male, Female, `<NA>`) %>% 
+  group_by(Year) %>% 
+  summarise(Male = sum(Male), Female = sum(Female), Unknown = sum(`<NA>`))
 
-colnames(edgeDS_genderInDebates)[6] <- "Unknown"
-edgeDS_genderInDebates.long <- melt(edgeDS_genderInDebates, id.vars = c(1,2,3))
+edgeDS_genderInDebates.long <- melt(edgeDS_genderInDebates, id.vars = c(1)) #2,3
 edgeDS_genderInDebates.long$variable <- factor(edgeDS_genderInDebates.long$variable, 
                                                levels = c("Unknown","Female","Male" , ordered = T))
 
-ggplot(edgeDS_genderInDebates.long, aes(x = Year, y = value, fill = variable)) + 
+ggplot(edgeDS_genderInDebates.long, aes(x = Year, y = value, fill = variable, label = value)) + 
     geom_bar(stat="identity", position="fill") + 
+    geom_text(aes(label = value), 
+              size = 4, position = position_fill(vjust = 0.5)) +
     scale_y_continuous(breaks = seq(0,1,by=0.05), labels = percent) +
-    labs(y = "Percent", fill = "Type", title = "Debaters' proportionality per year by Gender") + 
+    labs(y = "Percent", fill = "Type") + 
+    ggtitle ("Debaters' proportionality per year by Gender", 
+             subtitle = "Number present number of debaters per gender") + 
     theme_minimal() + 
     scale_fill_manual(
       values=c("Male"="#4477AA", "Female"="#DDCC77", "Unknown"="#CC6677")) +
@@ -529,6 +539,7 @@ ggplot(edgeDS_genderInDebates.long, aes(x = Year, y = value, fill = variable)) +
       values=c("Male"="#4477AA", "Female"="#DDCC77", "Unknown"="#CC6677"), 
       labels=c("Male", "Female", "Unknown")) +
     labs(fill = "Gender")
+    
 ```
 
 In recent years, after 2010, number of women has increased somewhat. 
@@ -1067,7 +1078,7 @@ ggplotly(
 
 The most comments are written when the debate size is below 200 people. 
 
-```{r}
+```{r, fig.height=8, fig.width=10, message=F, warning=F}
 ggplot(edgeDS_verbosity, aes(DebateSize, Number.Characters)) +
     coord_cartesian(ylim =c(0,7000)) + 
     scale_y_continuous(breaks = seq(0,10000, by = 500), limits = c(0,190000)) +
@@ -1077,7 +1088,7 @@ ggplot(edgeDS_verbosity, aes(DebateSize, Number.Characters)) +
 ***
 Create bins for h-index and i10-index (**citations**)
 
-```{r}
+```{r, fig.height=8, fig.width=10, message=F, warning=F}
 edgeDS_verbosity$hindex_bin <- cut(edgeDS_verbosity$H_Index, breaks=seq(0,150, by = 15), labels=c("0-15","15-30","30-45", "45-60", "60-75", "75-90", "90-105", "105-120", "120-135", "135-150"))
 
 ggplotly(
@@ -1090,7 +1101,7 @@ ggplotly(
 
 ***
 
-```{r}
+```{r, fig.height=8, fig.width=10, message=F, warning=F}
 edgeDS_verbosity$i10_bin <- cut(edgeDS_verbosity$i10_Index, breaks=seq(0,600, by = 40))
 
 ggplotly(
@@ -1104,24 +1115,58 @@ ggplotly(
 
 ```{r}
 rm(edgeDS_verbosity_aca_n, edgeDS_verbosity_aca_y, df_annotationsForFacets, edgeDS_verbosity_hphd_y, 
-   edgeDS_verbosity_disc_diff, edgeDS_verbosity_hphd_n)
+   edgeDS_verbosity_disc_diff, edgeDS_verbosity_hphd_n, edgeDS_verbosity)
 ```
 
 ***
 
-## Compare highest ranking people with all the rest.
+## Compare higher status participants with all the rest.
 
-Filter Phd + high ranking + work -> vs. all others
+### Comparison #1: Top 100 in Academia with PhD
 
-High Flisher is somebody in Academia with PhD. 
+What I call "High Flyers" are somebody who is in Academia with PhD (from TOP 100 universities according to Shanghai Ranking and US News and World Reported - union) and where their university workplace 
+was also ranked in TOP 100 (union). 
 
 ```{r}
-high_flighers <- edgeDS %>% 
-  filter(Academic == 1 & HavePhD == 1 & PhD_Institution_SR_Bin == 1)
+high_flyers <- edgeDS %>% 
+  filter(Academic == "Academicians" & HavePhD == 1) %>% 
+  filter(PhD_Institution_SR_Bin %in% c(1,2) | PhD_Institution_US_IR_Bin %in% c(1,2)) %>% 
+  filter(Workplace_SR_Bin %in% c(1,2) | Workplace_US_IR_Bin %in% c(1,2)) %>% 
+  select(Year, Number.Characters) %>% 
+  group_by(Year) %>% 
+  summarise(Number.Characters = sum(Number.Characters)) %>% 
+  mutate(type = "high_flyers")
+
+high_flyers_oppo <- edgeDS %>% 
+  filter(!(Academic == "Academicians" & HavePhD == 1)) %>% 
+  filter(!(PhD_Institution_SR_Bin %in% c(1,2) | PhD_Institution_US_IR_Bin %in% c(1,2))) %>% 
+  filter(!(Workplace_SR_Bin %in% c(1,2) | Workplace_US_IR_Bin %in% c(1,2))) %>% 
+  write_csv("~/documents/R-github/Crowdsourcing_Data_Analysis_2_EDGE_org/high_flyers_oppo.csv") %>% 
+  select(Year, Number.Characters) %>% 
+  group_by(Year) %>% 
+  summarise(Number.Characters = sum(Number.Characters)) %>% 
+  mutate(type = "high_flyers_oppo")
+  
+df <- rbind(high_flyers,high_flyers_oppo )
 ```
 
+***
 
+After data are prepared, plot them now. 
 
+```{r, fig.height=8, fig.width=10, message=F, warning=F}
+ggplot(df, aes(x=Year, y = Number.Characters, fill = as.factor(type))) + 
+  geom_bar(position="dodge", stat="identity") + # geom_line(aes(color = as.factor(type))) +
+  theme_minimal() + scale_fill_ptol() + 
+  labs(fill = "Type", color = "Type") +
+  scale_x_continuous(breaks = pretty(unique(df$Year), n = 19)) + 
+  scale_y_continuous(breaks = seq(0,1000000, by = 50000), labels = comma) + 
+  ggtitle("Cummulative sum of characters per year and group", 
+          subtitle = "Except for a few years where it is almost equal or even higher, 
+          high flyers comment much more than non-high-flyers.")
+```
+
+***
 
 # R Session/Devtools
 
