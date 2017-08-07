@@ -7,7 +7,7 @@ output:
    css: report_styles.css
    highlight: haddock
    number_sections: yes
-   self_contained: no
+   self_contained: true
    theme: readable
    toc: yes
    toc_float:
@@ -1173,9 +1173,3 @@ ggplot(df, aes(x=Year, y = Number.Characters, fill = as.factor(type))) +
 ```{r}
 sessionInfo()
 ```
-
-
-http://rpubs.com/marschmi/RMarkdown
-https://raw.githubusercontent.com/marschmi/RMarkdown_May11_2016/master/RMarkdown_Lesson.Rmd
-
-
