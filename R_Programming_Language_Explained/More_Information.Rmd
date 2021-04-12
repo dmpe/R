@@ -1,0 +1,5 @@
+*More Information:*
+
+[Learn R programming language basics in just 2 hours with this free course on statistical programming](https://www.freecodecamp.org/news/r-programming-course/)
+[An introduction to web scraping using R](https://www.freecodecamp.org/news/an-introduction-to-web-scraping-using-r-40284110c848/)
+[An introduction to aggregates in R: a powerful tool for playing with data](https://www.freecodecamp.org/news/aggregates-in-r-one-of-the-most-powerful-tool-you-can-ask-for-4dd14eafff1f/)

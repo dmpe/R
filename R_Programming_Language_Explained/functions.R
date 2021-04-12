@@ -70,7 +70,7 @@ sum <- function(a, b){
   a + b
 }
 
-result <- sum(1, 2)
+result = sum(1, 2)
 result
 # exit : [1] 3
 
@@ -97,7 +97,7 @@ sum = function(a, b, ...){
   a + b + ...
 }
 
-result <- sum(1, 2, 3) 
+result = sum(1, 2, 3) 
 result
 # exit : [1] 6
 
