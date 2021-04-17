@@ -13,5 +13,6 @@ Here you may find all exercises with R from :
 8.  [Crowdsourcing Data Analysis 2, Phase 2: Explaining Variability in Analyses and Results](https://docs.google.com/document/d/1fXQBLdWydISskOKhoq8gl5unuwsv7VA3pkKY4IWFS6o/edit)
     - [Results](http://rpubs.com/F789GH/AnalysisOfEdgeOrgData)
 9.  [Data analysis course @ FAU university](https://www.statistik.rw.fau.de/lehre/bachelor/datenanalyse/)
+10. [R Programming Language Explained - FreeCodeCamp.org Article](https://www.freecodecamp.org/news/r-programming-language-explained/)
 
 My IDE of choice is [RStudio](http://www.rstudio.com/). Just try it and [follow its development](https://www.github.com/rstudio/rstudio)
